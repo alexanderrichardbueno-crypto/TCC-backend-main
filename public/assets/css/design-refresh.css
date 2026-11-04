@@ -123,3 +123,100 @@ dialog.modal { width: 100%; max-width: none; height: 100%; max-height: none; bor
   .bottom-nav { display: grid; }
   .weather-map-page .map-workspace { height: calc(100dvh - 152px - env(safe-area-inset-bottom)); }
 }
+
+/* Public interface inspired by the supplied mobile screens. */
+:root {
+  --bg: #071225; --bg-strong: #091426; --panel: #16243a;
+  --panel-soft: #1c2d49; --line: #30405a; --text: #f5f7ff;
+  --muted: #9aa8bf; --cyan: #62a8ff; --blue: #2164f5;
+  --yellow: #ffbd00; --surface-inset: #101e32;
+  --surface-frost: #17253a; --body-background: #081427;
+  --shadow: 0 12px 32px #0003;
+}
+:root.light {
+  --bg: #edf3fc; --bg-strong: #f7faff; --panel: #fff;
+  --panel-soft: #e5eefc; --line: #c9d6e9; --text: #14223a;
+  --muted: #53647f; --cyan: #1359c6; --blue: #2164e8;
+  --surface-inset: #f0f5fc; --surface-frost: #fff;
+  --body-background: #edf3fc;
+}
+.topbar, .bottom-nav { background: var(--bg-strong); border-color: var(--line); }
+.brand-mark { background: #195ef0; color: #ffbd00; border-color: #3277ff; }
+.brand > span:last-child { color: #ffbd00; }
+.desktop-nav a[aria-current="page"] { background: #175ef4; color: #fff; border-color: #175ef4; }
+.button { background: linear-gradient(110deg,#155df2,#3280ff); border-color: #3679ff; border-radius: 16px; color: white; }
+.button:hover { background: #155df2; }
+.button.secondary { color: var(--cyan); border-color: #2755a1; background: #0c2755; }
+:root.light .button.secondary { background: #edf4ff; color: #1754bd; }
+.eyebrow, .section-label { color: var(--muted); letter-spacing: .09em; }
+.weather-home-page .weather-hero {
+  background: linear-gradient(165deg,#102b63,#0d1d3e 72%,#102039);
+  border: 1px solid #263d64; color: #f8faff;
+}
+.weather-home-page .weather-icon { color: #ffbd00; }
+.weather-home-page .temperature small { vertical-align: baseline; }
+.weather-home-page .metric, .weather-home-page .warning-panel,
+.profile-summary, .settings-panel, .content-card { background: var(--panel); border-color: var(--line); }
+.weather-home-page .metric strong { font-size: 18px; }
+.weather-home-page .warning-panel { text-align: left; }
+.weather-home-page .warning-panel .risk-icon { color: #ffbd00; }
+.auth-page { background: radial-gradient(ellipse at top,#102b60,#071225 62%); }
+.auth-story { background: linear-gradient(165deg,#102c66,#09172e); border-radius: 24px; }
+.auth-card { background: #1a273b; border: 1px solid #36445b; border-radius: 18px; }
+.auth-brand .brand-mark { display: none; }
+.auth-brand h1 { font-size: 34px; font-weight: 900; letter-spacing: -.05em; text-transform: uppercase; }
+.auth-brand p { color: #9aa8bf; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; }
+.role-switch a { border-radius: 24px; background: #121f32; }
+.role-switch a.active { background: #102c60; border-color: #205cca; color: #70b0ff; }
+.tabs { background: #29374a; border: 0; border-radius: 20px; padding: 4px; }
+.tabs a { border: 0; border-radius: 16px; }
+.tabs a.active { background: #1b61f5; border: 0; box-shadow: 0 5px 18px #0a50e66b; }
+.auth-card .field input, .auth-card .field select { background: #29364a; border: 1px solid #46546a; border-radius: 20px; color: #fff; }
+.auth-card .field label { color: #aebbd0; font-size: 11px; letter-spacing: .04em; }
+.guest-link { border: 1px solid #34435b; border-radius: 18px; padding: 12px; background: #152237; }
+.alert-card { border: 1px solid #48546a; box-shadow: none; }
+.alert-card[data-severity="CRITICAL"] { background: #251b34; border-color: #743049; }
+.alert-card[data-severity="HIGH"] { background: #29212d; border-color: #70452e; }
+.alert-card[data-severity="MODERATE"] { background: #222a2c; border-color: #6c5b27; }
+.alert-summary strong { border-radius: 50%; }
+.recommendations { border-radius: 16px; }
+.confirmed-location { border-radius: 18px; }
+.report-link { margin-top: 22px; }
+.report-note { font-size: 12px; text-align: center; }
+.profile-page .profile-summary, .profile-page .settings-panel { border-radius: 18px; }
+.profile-page .profile-summary { background: #213451; }
+.avatar { background: linear-gradient(145deg,#3679ff,#4337e3); border-radius: 18px; }
+.bottom-nav a.active, .bottom-nav a:hover:not(.disabled) { background: transparent; color: #ffbd00; }
+.bottom-nav .nav-icon { width: 20px; height: 20px; }
+.bottom-nav span { font-size: 11px; }
+@media (max-width: 720px) {
+  body { background: linear-gradient(180deg,#0e2249 0,#09162c 420px,#071225 100%); }
+  :root.light body { background: var(--body-background); }
+  .topbar { min-height: 60px; }
+  .app-shell { padding: 24px 20px 105px; }
+  .weather-home-page .app-shell { padding-top: 20px; }
+  .weather-home-page .home-heading { display: none; }
+  .weather-home-page .location-row { margin-bottom: 10px; padding-bottom: 10px; }
+  .weather-home-page .location-context .eyebrow { display: none; }
+  .weather-home-page .home-layout { gap: 20px; }
+  .weather-home-page .weather-hero { min-height: 0; padding: 20px 12px; text-align: center; border: 0; background: transparent; }
+  .weather-home-page .weather-hero::before, .weather-home-page .weather-hero::after { display: none; }
+  .weather-home-page .weather-icon { position: static; font-size: 48px; line-height: 1.1; }
+  .weather-home-page .temperature { margin: 12px 0; font-size: 76px; font-weight: 700; }
+  .weather-home-page .condition { font-size: 18px; margin: 5px 0; }
+  .weather-home-page .hero-kicker { margin-bottom: 10px; }
+  .weather-home-page .weather-grid { margin-top: 8px; border-radius: 18px; background: var(--panel); }
+  .weather-home-page .metric { padding: 16px 8px; }
+  .weather-home-page .metric strong { font-size: 14px; }
+  .weather-home-page .warning-panel { padding: 20px; }
+  .weather-home-page .warning-panel .risk-icon { margin: 18px 0; }
+  .home-shortcuts { gap: 10px; }
+  .home-shortcuts a { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+  .bottom-nav { min-height: calc(66px + env(safe-area-inset-bottom)); box-shadow: none; }
+  .bottom-nav a { min-height: 66px; padding: 8px 4px; }
+  .auth-page { padding: 45px 20px 28px; }
+  .auth-card { padding: 22px; }
+  .auth-brand { margin-bottom: 30px; }
+  .page-heading h1 { font-size: 24px; }
+  .alert-card:hover { transform: none; }
+}

@@ -4,7 +4,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     "/alertas.html": ["M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"],
     "/mapa.html": ["m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2z", "M9 3v16m6-14v16"],
     "/perfil.html": ["M4 21a8 8 0 0 1 16 0"],
+    "/estacoes.html": ["M4 20V10m8 10V4m8 16v-7"],
   };
+  // Keep the same useful destinations on every screen and give the map the
+  // central position from the mobile reference, without a decorative link.
+  document.querySelectorAll(".bottom-nav").forEach((nav) => {
+    const destinations = [
+      ["/inicio.html", "Início"], ["/estacoes.html", "Estações"],
+      ["/mapa.html", "Mapa"], ["/alertas.html", "Alertas"],
+      ["/perfil.html", "Perfil"],
+    ];
+    const badge = nav.querySelector("#alert-badge");
+    nav.replaceChildren(...destinations.map(([href, label]) => {
+      const anchor = document.createElement("a");
+      anchor.href = href;
+      if (location.pathname === href) {
+        anchor.className = "active";
+        anchor.setAttribute("aria-current", "page");
+      }
+      const caption = document.createElement("span");
+      caption.textContent = label;
+      if (href === "/alertas.html" && badge) caption.append(" ", badge);
+      anchor.append(caption);
+      return anchor;
+    }));
+  });
   document.querySelectorAll(".bottom-nav a, .top-actions .icon-button").forEach((anchor) => {
     const paths = anchor.classList.contains("nav-center")
       ? ["M6 17h12a4 4 0 0 0 .4-8A6 6 0 0 0 7 9a4 4 0 0 0-1 8Z", "m13 2-2 5h3l-2 5"]
