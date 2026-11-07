@@ -1,0 +1,43 @@
+/* This entry screen uses the story as an introduction, then a single login column. */
+.login-entry .auth-shell { display: block; max-width: 440px; }
+.login-entry .login-wordmark { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.login-entry .login-wordmark img { flex: none; filter: drop-shadow(0 4px 12px #155df244); }
+.login-entry .login-wordmark h1 { margin: 0; }
+.login-entry .auth-brand p { margin-top: 12px; }
+.login-entry .auth-form-column { width: 100%; }
+.login-entry.intro-active .auth-form-column { visibility: hidden; }
+.login-entry #login-intro {
+  display: flex; flex-direction: column; justify-content: center;
+  position: fixed; inset: 0; z-index: 100;
+  max-width: none; margin: 0; padding: 28px max(24px, calc((100vw - 570px) / 2));
+  overflow-y: auto; border-radius: 0;
+  background: radial-gradient(ellipse at 50% 30%, #14336b, #08162e 65%);
+  animation: intro-exit 3.4s ease both;
+}
+.login-entry #login-intro > * { flex-shrink: 0; }
+.login-entry #login-intro .auth-story-art { height: 265px; }
+.login-entry #login-intro h2 { font-size: clamp(34px, 5vw, 58px); }
+.login-entry #login-intro > .eyebrow,
+.login-entry #login-intro .auth-story-art,
+.login-entry #login-intro h2,
+.login-entry #login-intro p,
+.login-entry #login-intro .auth-story-tags { animation: intro-reveal 1.2s ease both; }
+.login-entry #login-intro .auth-story-art { animation-delay: .15s; }
+.login-entry #login-intro h2 { animation-delay: .4s; }
+.login-entry #login-intro p { animation-delay: .6s; }
+.login-entry #login-intro .auth-story-tags { animation-delay: .8s; }
+.intro-skip { align-self: flex-end; background: transparent; color: #c6dcf7; border: 1px solid #49628a; border-radius: 20px; padding: 10px 16px; margin-top: 24px; cursor: pointer; }
+.login-entry.intro-complete .auth-form-column { animation: login-reveal .35s ease both; }
+@keyframes intro-reveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes intro-exit { 0%, 84% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes login-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (max-height: 720px) {
+  .login-entry #login-intro { justify-content: flex-start; padding-top: 24px; }
+  .login-entry #login-intro .auth-story-art { height: 180px; }
+  .login-entry #login-intro .story-orbit-two { width: 180px; height: 180px; }
+  .login-entry #login-intro .story-orbit-one { width: 140px; height: 140px; }
+  .login-entry #login-intro p { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-entry #login-intro, .login-entry #login-intro *, .login-entry.intro-complete .auth-form-column { animation: none; }
+}
