@@ -23,7 +23,7 @@
     document.body.classList.remove("intro-active");
     document.body.classList.add("intro-complete");
     try { sessionStorage.setItem("prevclima-login-intro", "seen"); } catch (_) { /* Storage is optional. */ }
-    if (restoreFocus) document.querySelector("#email")?.focus();
+    if (restoreFocus) content.querySelector("input:not([type='hidden'])")?.focus();
     motion.removeEventListener("change", onMotionChange);
   }
   function onMotionChange(event) { if (event.matches) finish(); }

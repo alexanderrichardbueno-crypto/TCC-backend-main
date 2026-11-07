@@ -6,22 +6,24 @@
   <title>PrevClima - Criar conta</title>
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
+  <link rel="stylesheet" href="/assets/css/login-intro.css">
+  <script src="/assets/js/login-intro.js" defer></script>
   <script src="/assets/js/api.js" defer></script>
   <script src="/assets/js/register.js" defer></script>
 </head>
-<body class="auth-page">
+<body class="auth-page login-entry">
   <main class="auth-shell">
-    <aside class="auth-story" aria-label="Sobre o PrevClima">
+    <aside id="login-intro" class="auth-story" aria-label="Sobre o PrevClima" hidden>
       <span class="eyebrow">PREVCLIMA / INTELIGÊNCIA CLIMÁTICA</span>
       <div class="auth-story-art" aria-hidden="true"><span class="story-orbit story-orbit-one"></span><span class="story-orbit story-orbit-two"></span><span class="story-core">&#9889;</span><span class="story-signal story-signal-one"></span><span class="story-signal story-signal-two"></span></div>
       <h2>O tempo muda.<br><em>Você se antecipa.</em></h2>
       <p>Crie sua conta para acompanhar o tempo na sua cidade e receber avisos sobre sua região.</p>
       <div class="auth-story-tags"><span>Previsão local</span><span>Avisos do INMET</span><span>Relatos da comunidade</span></div>
+      <button id="skip-intro" class="intro-skip" type="button">Ir para o cadastro →</button>
     </aside>
     <div class="auth-form-column">
     <header class="auth-brand">
-      <span class="brand-mark" aria-hidden="true">&#9889;</span>
-      <h1>Prev<span>Clima</span></h1>
+      <div class="login-wordmark"><img src="/assets/img/prevclima-mark.svg" width="42" height="42" alt=""><h1>Prev<span>Clima</span></h1></div>
       <p>Crie sua conta para receber alertas da sua região</p>
     </header>
     <section class="auth-card">
