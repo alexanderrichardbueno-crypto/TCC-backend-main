@@ -10,3 +10,4 @@ htmlcov/
 *.egg-info/
 frontend/
 tmp*
+backups/

@@ -11,6 +11,7 @@ dependencies = [
   "defusedxml>=0.7,<1",
   "pwdlib[argon2]>=0.2,<1",
   "pydantic-settings>=2.7,<3",
+  "psycopg[binary]>=3.2,<4",
   "pymysql[rsa]>=1.1,<2",
   "pyjwt>=2.10,<3",
   "sqlalchemy>=2.0,<3",
