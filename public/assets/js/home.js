@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelector("#location-name").textContent = `${forecast.city}, ${forecast.state}`;
       document.querySelector("#home-map-link").href = `/mapa.html?${new URLSearchParams({ city: forecast.city, state: forecast.state })}`;
       const condition = forecast.condition.toLowerCase();
-      document.querySelector(".weather-icon").textContent = /tempestade|granizo/.test(condition) ? "⛈" : /chuva|garoa/.test(condition) ? "🌧" : /limpo/.test(condition) ? "☀" : "☁";
+      PrevClimaWeatherArt(document.querySelector(".weather-icon"), condition);
       document.querySelector("#temperature").textContent = Math.round(Number(forecast.temperature_c));
       document.querySelector("#condition").textContent = forecast.condition;
       document.querySelector("#max-temperature").textContent = Math.round(Number(forecast.maximum_c));
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".risk-icon").textContent = first ? "!" : "i";
     document.querySelector("#warning-feed").textContent = PrevClima.feedStatus(data.warning_feed);
     document.querySelector("#warning-title").textContent = first
-      ? `${first.is_demo ? "DEMO - " : ""}${first.title}`
+      ? first.title
       : "Nenhum aviso disponível";
     document.querySelector("#warning-message").textContent = first
       ? first.message
@@ -47,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#warning-source").textContent = first
       ? `Origem: ${first.source_name}`
       : "";
-    document.querySelector("#demo-chip").hidden = !(first && first.is_demo);
     document.querySelector("#alert-badge").textContent = data.unread_alert_count || "";
   }
 

@@ -4,35 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PrevClima - Entrar</title>
+  <link rel="icon" href="/assets/img/logo-reserva.svg" type="image/svg+xml">
+  <script src="/assets/js/theme.js"></script>
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
   <link rel="stylesheet" href="/assets/css/login-intro.css">
   <script src="/assets/js/login-intro.js" defer></script>
   <script src="/assets/js/api.js" defer></script>
   <script src="/assets/js/login.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
 </head>
 <body class="auth-page login-entry">
   <main class="auth-shell">
     <aside id="login-intro" class="auth-story" aria-label="Sobre o PrevClima" hidden>
       <span class="eyebrow">PREVCLIMA / INTELIGÊNCIA CLIMÁTICA</span>
-      <div class="auth-story-art" aria-hidden="true"><span class="story-orbit story-orbit-one"></span><span class="story-orbit story-orbit-two"></span><span class="story-core">&#9889;</span><span class="story-signal story-signal-one"></span><span class="story-signal story-signal-two"></span></div>
+      <div class="auth-story-art" aria-hidden="true"><span class="story-orbit story-orbit-one"></span><span class="story-orbit story-orbit-two"></span><span class="story-core"><img data-logo src="/marca/logo" alt=""></span><span class="story-signal story-signal-one"></span><span class="story-signal story-signal-two"></span></div>
       <h2>O tempo muda.<br><em>Você se antecipa.</em></h2>
       <p>Previsões para a sua região, avisos oficiais e informações para agir com segurança — no mesmo lugar.</p>
-      <div class="auth-story-tags"><span>Previsão local</span><span>Avisos do INMET</span><span>Relatos da comunidade</span></div>
+      <div class="auth-story-tags"><span>Previsão local</span><span>Avisos do INMET</span><span>Alertas de tempo severo</span></div>
       <button id="skip-intro" class="intro-skip" type="button">Ir para o login →</button>
     </aside>
     <div class="auth-form-column">
     <header class="auth-brand">
-      <div class="login-wordmark"><img src="/assets/img/prevclima-mark.svg" width="42" height="42" alt=""><h1>Prev<span>Clima</span></h1></div>
+      <div class="login-wordmark"><img data-logo src="/marca/logo" width="42" height="42" alt=""><h1>Prev<span>Clima</span></h1></div>
       <p>Tecnologia a serviço da segurança climática</p>
     </header>
-    <nav class="role-switch" aria-label="Tipo de acesso">
-      <a class="active" href="/">Usuário</a>
-      <a href="/meteorologista.html">Meteorologista</a>
-    </nav>
     <section class="auth-card">
       <nav class="tabs" aria-label="Autenticação">
-        <a class="active" href="/">Entrar</a>
+        <a class="active" href="/index.html">Entrar</a>
         <a href="/cadastro.html">Criar conta</a>
       </nav>
       <form id="login-form">
@@ -44,7 +46,7 @@
           <label for="password">Senha</label>
           <input id="password" name="password" type="password" autocomplete="current-password" required>
         </div>
-        <a class="helper" href="#" aria-disabled="true" title="Recurso em preparação">Esqueci minha senha</a>
+        <a class="helper" href="/recuperar-senha.html">Esqueci minha senha</a>
         <p id="form-message" class="error" role="alert"></p>
         <button class="button" type="submit">Entrar na plataforma</button>
       </form>

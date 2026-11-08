@@ -23,7 +23,7 @@ from app.station_models import StationObservation, WeatherStation
 from app.station_sync import save_observations, save_station
 
 router = APIRouter(prefix="/stations", tags=["estações INMET"])
-Operator = Annotated[User, Depends(require_roles("ADMIN", "METEOROLOGIST"))]
+Operator = Annotated[User, Depends(require_roles("METEOROLOGIST"))]
 
 
 class StationOut(BaseModel):

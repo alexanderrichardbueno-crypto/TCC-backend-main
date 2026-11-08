@@ -6,11 +6,10 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import func, select
 
-from app.models import AlertRead, Forecast, Role, User, WeatherReport
+from app.models import AlertRead, Forecast, User
 from app.routers.weather import point_in_polygon
 from app.schemas import AlertCreateRequest
-from app.security import hash_password
-from tests.conftest import csrf_headers
+from tests.conftest import capture_mail, csrf_headers, verify_email
 
 
 def test_health_and_static_page(client: TestClient):
@@ -22,12 +21,14 @@ def test_health_and_static_page(client: TestClient):
         "/localizacao.html",
         "/mapa.html",
         "/informacoes.html",
-        "/relato.html",
+        "/confirmar-email.html",
+        "/recuperar-senha.html",
     ):
         assert client.get(path).status_code == 200
 
 
-def test_register_login_and_profile(client: TestClient):
+def test_register_login_and_profile(client: TestClient, monkeypatch):
+    sent = capture_mail(monkeypatch)
     registration = client.post(
         "/api/v1/auth/register",
         json={
@@ -39,10 +40,12 @@ def test_register_login_and_profile(client: TestClient):
         },
     )
     assert registration.status_code == 201
-    body = registration.json()
-    assert body["user"]["email"] == "maria@exemplo.com"
-    assert body["user"]["role"] == "USER"
-    assert body["user"]["state"] == "SP"
+    assert registration.json()["email"] == "maria@exemplo.com"
+    assert "prevclima_access" not in client.cookies
+    verify_email(client, sent)
+    me = client.get("/api/v1/users/me").json()
+    assert me["role"] == "USER"
+    assert me["state"] == "SP"
     assert "prevclima_access" in client.cookies
 
     assert client.post("/api/v1/auth/logout").status_code == 403
@@ -139,29 +142,6 @@ def test_city_change_clears_stale_coordinates(registered_client: TestClient):
     assert changed.json()["longitude"] is None
 
 
-def test_public_home_and_alerts_use_database(client: TestClient):
-    home = client.get("/api/v1/home?city=Mongagua&state=SP")
-    assert home.status_code == 200
-    assert home.json()["forecast"]["source_name"] == "TEST DATA"
-    assert home.json()["forecast"]["issued_at"].endswith("Z")
-    assert home.json()["unread_alert_count"] == 1
-
-    alerts = client.get("/api/v1/alerts")
-    assert alerts.status_code == 200
-    assert alerts.json()[0]["title"] == "Tempestade severa"
-    assert alerts.json()[0]["is_demo"] is True
-
-
-def test_map_data_exposes_active_geometry(client: TestClient):
-    response = client.get("/api/v1/map-data")
-    assert response.status_code == 200
-    body = response.json()
-    assert body["generated_at"].endswith("Z")
-    assert body["alerts"][0]["radius_km"] == "30.00"
-    assert body["alerts"][0]["is_demo"] is True
-    assert body["forecast_areas"][0]["polygon"]["type"] == "Polygon"
-
-
 def test_scheduled_forecast_is_not_exposed(client: TestClient, db):
     now = datetime.now(UTC)
     db.add(
@@ -199,51 +179,6 @@ def test_education_hides_scheduled_content(client: TestClient):
     response = client.get("/api/v1/education")
     assert response.status_code == 200
     assert [item["title"] for item in response.json()] == ["Seguranca em tempestades"]
-
-
-def test_report_submission_is_authenticated_owned_and_validated(
-    client: TestClient, registered_client: TestClient, db
-):
-    payload = {
-        "description": "Granizo observado perto da avenida principal.",
-        "occurred_at": (datetime.now(UTC) - timedelta(minutes=5)).isoformat(),
-        "latitude": -24.1,
-        "longitude": -46.62,
-        "image_url": "https://exemplo.com/granizo.jpg",
-    }
-    with TestClient(client.app) as anonymous:
-        assert anonymous.post("/api/v1/reports", json=payload).status_code == 401
-    assert registered_client.post("/api/v1/reports", json=payload).status_code == 403
-    created = registered_client.post(
-        "/api/v1/reports", json=payload, headers=csrf_headers(registered_client)
-    )
-    assert created.status_code == 201
-    assert created.json()["status"] == "PENDING"
-    own = registered_client.get("/api/v1/reports/me")
-    assert own.status_code == 200
-    assert [item["id"] for item in own.json()] == [created.json()["id"]]
-    report = db.get(WeatherReport, created.json()["id"])
-    user = db.scalar(select(User).where(User.email == "maria@exemplo.com"))
-    assert report.reporter_id == user.id
-
-    future = registered_client.post(
-        "/api/v1/reports",
-        json={**payload, "occurred_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat()},
-        headers=csrf_headers(registered_client),
-    )
-    assert future.status_code == 422
-    unsafe_url = registered_client.post(
-        "/api/v1/reports",
-        json={**payload, "image_url": "javascript:alert(1)"},
-        headers=csrf_headers(registered_client),
-    )
-    assert unsafe_url.status_code == 422
-    blank_description = registered_client.post(
-        "/api/v1/reports",
-        json={**payload, "description": "          "},
-        headers=csrf_headers(registered_client),
-    )
-    assert blank_description.status_code == 422
 
 
 def test_alert_polygon_validation_rejects_malformed_geometry():
@@ -334,66 +269,22 @@ def test_polygon_targeting_includes_boundary_and_excludes_holes():
     assert not point_in_polygon(12, 5, polygon)
 
 
-def test_only_admin_can_create_professional_accounts(registered_client: TestClient, db):
-    payload = {
-        "name": "Meteorologista Teste",
-        "email": "meteo@exemplo.com",
-        "password": "Meteo123!",
-        "role": "METEOROLOGIST",
-        "city": "Santos",
-        "state": "SP",
-    }
-    denied = registered_client.post(
-        "/api/v1/admin/users", json=payload, headers=csrf_headers(registered_client)
-    )
-    assert denied.status_code == 403
+def test_public_home_and_alerts_use_database(client: TestClient):
+    home = client.get("/api/v1/home?city=Mongagua&state=SP")
+    assert home.status_code == 200
+    assert home.json()["forecast"]["source_name"] == "TEST DATA"
+    assert home.json()["forecast"]["issued_at"].endswith("Z")
+    assert home.json()["unread_alert_count"] == 1
 
-    admin_role = db.scalar(select(Role).where(Role.code == "ADMIN"))
-    db.add(
-        User(
-            public_code="TEST-ADMIN",
-            name="Administrador Teste",
-            email="admin-teste@exemplo.com",
-            password_hash=hash_password("Admin123!"),
-            role_id=admin_role.id,
-        )
-    )
-    db.commit()
-    registered_client.cookies.clear()
-    login = registered_client.post(
-        "/api/v1/auth/login",
-        json={"email": "admin-teste@exemplo.com", "password": "Admin123!"},
-    )
-    assert login.status_code == 200
-    created = registered_client.post(
-        "/api/v1/admin/users", json=payload, headers=csrf_headers(registered_client)
-    )
-    assert created.status_code == 201
-    assert created.json()["role"] == "METEOROLOGIST"
+    alerts = client.get("/api/v1/alerts")
+    assert alerts.status_code == 200
+    assert alerts.json()[0]["title"] == "Tempestade severa"
 
-    registered_client.cookies.clear()
-    professional_login = registered_client.post(
-        "/api/v1/auth/login-professional",
-        json={"email": "meteo@exemplo.com", "password": "Meteo123!"},
-    )
-    assert professional_login.status_code == 200
-    now = datetime.now(UTC)
-    alert = registered_client.post(
-        "/api/v1/alerts",
-        headers=csrf_headers(registered_client),
-        json={
-            "title": "Alerta profissional",
-            "message": "Mensagem validada pelo meteorologista.",
-            "event_type": "HEAVY_RAIN",
-            "severity": "HIGH",
-            "area_name": "Santos",
-            "latitude": -23.96,
-            "longitude": -46.33,
-            "radius_km": 20,
-            "recommendations": ["Evite areas alagadas"],
-            "issued_at": now.isoformat(),
-            "valid_until": (now + timedelta(hours=2)).isoformat(),
-        },
-    )
-    assert alert.status_code == 201
-    assert alert.json()["is_demo"] is False
+
+def test_map_data_exposes_active_geometry(client: TestClient):
+    response = client.get("/api/v1/map-data")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["generated_at"].endswith("Z")
+    assert body["alerts"][0]["radius_km"] == "30.00"
+    assert body["forecast_areas"][0]["polygon"]["type"] == "Polygon"

@@ -4,16 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PrevClima - Início</title>
+  <link rel="icon" href="/assets/img/logo-reserva.svg" type="image/svg+xml">
+  <script src="/assets/js/theme.js"></script>
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
   <script src="/assets/js/api.js" defer></script>
   <script src="/assets/js/shell.js" defer></script>
-  <script src="/assets/js/home.js" defer></script>
+  <script src="/assets/js/weather-art.js?v=4" defer></script>
+  <script src="/assets/js/home.js?v=2" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
+  <link rel="stylesheet" href="/assets/css/weather-art.css?v=2">
 </head>
 <body class="weather-home-page">
   <a class="skip-link" href="#main-content">Ir para o conteúdo</a>
   <header class="topbar">
-    <a class="brand" href="/inicio.html"><span class="brand-mark">&#9889;</span> Prev<span>Clima</span></a>
+    <a class="brand" href="/inicio.html"><img class="brand-logo" data-logo src="/marca/logo-small" width="36" height="36" alt=""><span>Prev</span><span>Clima</span></a>
     <nav class="desktop-nav" data-role-navigation aria-label="Navegação principal"></nav>
     <div class="top-actions">
       <a class="icon-button" href="/alertas.html" aria-label="Alertas">!</a>
@@ -30,7 +38,7 @@
     <div class="weather-column">
     <section class="weather-hero" aria-live="polite">
       <div class="hero-kicker"><span class="eyebrow">PANORAMA DO TEMPO</span><span id="forecast-status" class="forecast-status">Consultando</span></div>
-      <div class="weather-icon" aria-hidden="true">&#9729;&#65039;</div>
+      <div class="weather-icon" aria-hidden="true"></div>
       <div class="temperature"><span id="temperature">--</span><small>&deg;C</small></div>
       <h2 id="condition" class="condition">Carregando previsão...</h2>
       <p class="muted">Máx. <span id="max-temperature">--</span>&deg; | Mín. <span id="min-temperature">--</span>&deg;</p>
@@ -46,7 +54,7 @@
     <section id="warning-panel" class="warning-panel" data-severity="UNKNOWN" aria-live="polite">
       <span class="eyebrow">AVISOS METEOROLÓGICOS</span>
       <div class="risk-icon" aria-hidden="true">!</div>
-      <span id="demo-chip" class="demo-chip" hidden>Dados de demonstração</span>
+      
       <h2 id="warning-title">Nenhum alerta carregado</h2>
       <p id="warning-message" class="muted">Consultando avisos disponíveis para sua região.</p>
       <p id="warning-source" class="data-source"></p>

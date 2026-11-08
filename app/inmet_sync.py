@@ -80,7 +80,6 @@ def sync_inmet_warnings(
         db.add(
             WeatherAlert(
                 source_key=warning.source_key,
-                is_demo=False,
                 created_by=actor.id if actor else None,
                 origin="INMET",
                 source_name="Instituto Nacional de Meteorologia (INMET)",

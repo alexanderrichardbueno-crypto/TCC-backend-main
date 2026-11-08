@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
           state: state || null,
         }),
       });
-      window.location.assign("/localizacao.html");
+      window.location.assign(`/confirmar-email.html?email=${encodeURIComponent(form.email.value.trim())}`);
     } catch (error) {
       message.textContent = error.message;
     } finally {

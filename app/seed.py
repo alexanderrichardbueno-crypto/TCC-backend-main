@@ -1,18 +1,75 @@
-from datetime import UTC, datetime, time, timedelta
-from decimal import Decimal
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 
 from app.config import get_settings
 from app.database import SessionLocal
-from app.models import EducationalContent, Forecast, Role, User, WeatherAlert
+from app.models import EducationalContent, Role, User
 from app.security import hash_password
 
 ROLES = {
     "USER": "Usuário",
     "METEOROLOGIST": "Meteorologista",
-    "ADMIN": "Administrador",
 }
+PREVOTS = "https://prevots.org/tempo-severo/"
+DEFESA_CIVIL = "https://www.gov.br/mdr/pt-br/assuntos/protecao-e-defesa-civil"
+EDUCATION = [
+    (
+        "EDU-TEMPO-SEVERO",
+        "O que é tempo severo",
+        "Tempo severo é o conjunto de fenômenos ligados a tempestades convectivas capazes de "
+        "causar danos: rajadas de vento acima de 80 km/h, granizo maior que 2 cm ou acumulado, "
+        "tornados e chuvas intensas que provocam alagamentos. O Sul, o Sudeste e o Centro-Oeste "
+        "do Brasil estão entre as regiões do mundo mais propensas a esses eventos.",
+        "/assets/img/edu-tempestade.svg",
+        PREVOTS,
+    ),
+    (
+        "EDU-TEMPESTADE",
+        "Tempestades: como se proteger",
+        "Permaneça em local coberto e afaste-se de janelas. Não procure abrigo sob árvores, "
+        "evite campos abertos e desligue aparelhos da tomada antes da chegada dos raios. "
+        "Acompanhe os avisos oficiais e as orientações da Defesa Civil (199).",
+        "/assets/img/edu-tempestade.svg",
+        DEFESA_CIVIL,
+    ),
+    (
+        "EDU-GRANIZO",
+        "Granizo: reduza os danos",
+        "O granizo pode quebrar vidros e telhas, ferir pessoas e destruir plantações. Abrigue-se "
+        "em local fechado, fique longe de janelas e claraboias e, se possível, guarde o veículo "
+        "em local coberto antes da tempestade. Nunca saia para proteger bens durante a queda.",
+        "/assets/img/edu-granizo.svg",
+        PREVOTS,
+    ),
+    (
+        "EDU-RAJADAS",
+        "Rajadas de vento: o que fazer",
+        "Rajadas fortes derrubam árvores, postes e estruturas leves. Antes da tempestade, prenda "
+        "objetos soltos. Durante o evento, fique longe de árvores, muros, placas e fios caídos. "
+        "Ao dirigir, reduza a velocidade e não pare sob árvores ou viadutos.",
+        "/assets/img/edu-vento.svg",
+        DEFESA_CIVIL,
+    ),
+    (
+        "EDU-TORNADO",
+        "Tornados: onde se abrigar",
+        "Ao receber um alerta de tornado, vá imediatamente para o cômodo mais interno e baixo da "
+        "construção, longe de portas e janelas, e proteja a cabeça e o pescoço. Não fique em "
+        "veículos ou estruturas leves e nunca tente filmar ou seguir o fenômeno.",
+        "/assets/img/edu-tornado.svg",
+        PREVOTS,
+    ),
+    (
+        "EDU-ALAGAMENTO",
+        "Chuva intensa e alagamentos",
+        "Nunca atravesse uma via alagada a pé ou de veículo: a água esconde buracos, correnteza "
+        "e redes elétricas. Procure locais altos, desligue a energia se a água entrar em casa e "
+        "ligue 199 (Defesa Civil) ou 193 (Bombeiros) em caso de risco.",
+        "/assets/img/edu-alagamento.svg",
+        DEFESA_CIVIL,
+    ),
+]
 
 
 def ensure_roles(db) -> dict[str, Role]:
@@ -29,182 +86,41 @@ def ensure_roles(db) -> dict[str, Role]:
     return roles
 
 
-def ensure_user(db, roles, *, email: str | None, password: str | None, role: str, name: str):
-    if not email or not password:
-        return None
-    email = email.strip().lower()
-    user = db.scalar(select(User).where(User.email == email))
-    if user:
-        if user.role_id != roles[role].id or not user.is_active:
-            raise RuntimeError(f"A conta de seed {email} possui funcao ou estado inesperado")
-        return user
-    user = User(
-        public_code=f"DEMO-{role[:4]}-{len(email):04d}",
-        name=name,
-        email=email,
-        password_hash=hash_password(password),
-        role_id=roles[role].id,
-        city="Mongagua",
-        state="SP",
-        latitude=Decimal("-24.1008"),
-        longitude=Decimal("-46.6200"),
-        email_verified_at=datetime.now(UTC),
-    )
-    db.add(user)
-    db.flush()
-    return user
-
-
-def ensure_demo_weather(db, meteorologist: User | None):
-    now = datetime.now(UTC)
-    bucket_start = datetime.combine(
-        now.date() - timedelta(days=now.weekday()), time.min, tzinfo=UTC
-    )
-    bucket_end = bucket_start + timedelta(days=7)
-    author_id = meteorologist.id if meteorologist else None
-    forecast = db.scalar(select(Forecast).where(Forecast.source_key == "DEMO-MONGAGUA-CURRENT"))
-    if not forecast:
-        forecast = Forecast(source_key="DEMO-MONGAGUA-CURRENT")
-        db.add(forecast)
-    forecast.created_by = author_id
-    forecast.city = "Mongagua"
-    forecast.state = "SP"
-    forecast.condition = "Parcialmente nublado"
-    forecast.temperature_c = Decimal("23")
-    forecast.minimum_c = Decimal("18")
-    forecast.maximum_c = Decimal("26")
-    forecast.humidity = 68
-    forecast.wind_kmh = Decimal("14")
-    forecast.rain_probability = 73
-    forecast.severity = "HIGH"
-    forecast.description = "Risco de tempestades e rajadas de vento nas proximas horas."
-    forecast.polygon = {
-        "type": "Polygon",
-        "coordinates": [
-            [
-                [-49.8, -20.0],
-                [-43.0, -20.0],
-                [-43.0, -26.2],
-                [-49.8, -26.2],
-                [-49.8, -20.0],
-            ]
-        ],
-    }
-    forecast.source_name = "DEMONSTRACAO - dados sem monitoramento em tempo real"
-    forecast.issued_at = now - timedelta(minutes=10)
-    forecast.valid_until = now + timedelta(days=7)
-
-    examples = [
-        {
-            "source_key": "DEMO-ALERT-TEMPESTADE",
-            "title": "Tempestade severa",
-            "event_type": "SEVERE_STORM",
-            "severity": "CRITICAL",
-            "area_name": "Baixada Santista",
-            "message": (
-                "Ventos fortes e raios frequentes. Ha risco de alagamento e queda de arvores."
-            ),
-            "recommendations": [
-                "Procure abrigo imediatamente",
-                "Evite areas abertas e arvores",
-                "Mantenha-se longe de janelas",
-                "Emergencias: Bombeiros 193 e Defesa Civil 199",
-            ],
-        },
-        {
-            "source_key": "DEMO-ALERT-VENDAVAL",
-            "title": "Vendaval",
-            "event_type": "WINDSTORM",
-            "severity": "HIGH",
-            "area_name": "Litoral de Sao Paulo",
-            "message": "Rajadas fortes podem ocorrer nas proximas horas.",
-            "recommendations": [
-                "Evite areas abertas",
-                "Afaste-se de arvores e postes",
-                "Permaneca em local protegido",
-            ],
-        },
-        {
-            "source_key": "DEMO-ALERT-CHUVA",
-            "title": "Chuva intensa",
-            "event_type": "HEAVY_RAIN",
-            "severity": "MODERATE",
-            "area_name": "Litoral Sul",
-            "message": "Pode haver chuva intensa e pontos de alagamento.",
-            "recommendations": [
-                "Evite areas sujeitas a alagamentos",
-                "Reduza a velocidade no transito",
-                "Acompanhe novos alertas",
-            ],
-        },
-    ]
-    for position, data in enumerate(examples):
-        data["source_key"] = f"{data['source_key']}-{bucket_start.date().isoformat()}"
-        alert = db.scalar(select(WeatherAlert).where(WeatherAlert.source_key == data["source_key"]))
-        if alert:
-            continue
-        alert = WeatherAlert(
-            source_key=data["source_key"],
-            is_demo=True,
-            origin="DEMO",
-            source_name="PrevClima - demonstracao",
-            validation_status="ACTIVE",
+def ensure_owner(db, roles, settings) -> None:
+    """RF03: a conta do dono já entra no banco com o acesso de meteorologista."""
+    if not settings.owner_email or not settings.owner_password:
+        return
+    email = settings.owner_email.strip().lower()
+    if db.scalar(select(User.id).where(User.email == email)):
+        return
+    db.add(
+        User(
+            public_code="PVC-DONO0001",
+            name=settings.owner_name,
+            email=email,
+            password_hash=hash_password(settings.owner_password),
+            role_id=roles["METEOROLOGIST"].id,
+            email_verified_at=datetime.now(UTC),
         )
-        db.add(alert)
-        for key, value in data.items():
-            setattr(alert, key, value)
-        alert.created_by = author_id
-        alert.latitude = Decimal("-24.1008")
-        alert.longitude = Decimal("-46.6200")
-        alert.radius_km = Decimal("30")
-        alert.issued_at = max(bucket_start, now - timedelta(minutes=15 * (position + 1)))
-        alert.valid_until = bucket_end
+    )
 
 
-def ensure_demo_education(db, meteorologist: User | None):
+def ensure_education(db) -> None:
     published_at = datetime.now(UTC)
-    items = [
-        (
-            "DEMO-EDU-TEMPESTADE",
-            "Como agir durante uma tempestade severa",
-            (
-                "Permaneça em local coberto, afaste-se de janelas e não procure abrigo "
-                "sob árvores. Desligue equipamentos da tomada quando isso puder ser feito "
-                "com segurança e acompanhe os avisos da Defesa Civil."
-            ),
-            "https://www.gov.br/mdr/pt-br/assuntos/protecao-e-defesa-civil",
-        ),
-        (
-            "DEMO-EDU-ALAGAMENTO",
-            "Cuidados em áreas com alagamento",
-            (
-                "Nunca atravesse uma via alagada a pé ou de veículo. A água pode esconder "
-                "buracos, correnteza e redes elétricas. Procure uma rota elevada e ligue 199 "
-                "em caso de risco."
-            ),
-            "https://www.gov.br/mdr/pt-br/assuntos/protecao-e-defesa-civil",
-        ),
-        (
-            "DEMO-EDU-ALERTAS",
-            "Entenda os níveis de alerta",
-            (
-                "Os níveis indicam a gravidade potencial do evento. Consulte a descrição, "
-                "a área afetada e as recomendações de cada aviso antes de tomar decisões."
-            ),
-            "https://portal.inmet.gov.br/",
-        ),
-    ]
-    for source_key, title, body, reference_url in items:
-        if db.scalar(
-            select(EducationalContent.id).where(EducationalContent.source_key == source_key)
-        ):
+    for source_key, title, body, media_url, reference_url in EDUCATION:
+        item = db.scalar(
+            select(EducationalContent).where(EducationalContent.source_key == source_key)
+        )
+        if item:
+            item.title, item.body = title, body
+            item.media_url, item.reference_url = media_url, reference_url
             continue
         db.add(
             EducationalContent(
                 source_key=source_key,
-                author_id=meteorologist.id if meteorologist else None,
                 title=title,
                 body=body,
+                media_url=media_url,
                 reference_url=reference_url,
                 published_at=published_at,
             )
@@ -212,36 +128,10 @@ def ensure_demo_education(db, meteorologist: User | None):
 
 
 def main():
-    settings = get_settings()
     with SessionLocal() as db:
         roles = ensure_roles(db)
-        if settings.seed_demo_data:
-            ensure_user(
-                db,
-                roles,
-                email=settings.seed_admin_email,
-                password=settings.seed_admin_password,
-                role="ADMIN",
-                name="Administrador Demo",
-            )
-            meteorologist = ensure_user(
-                db,
-                roles,
-                email=settings.seed_meteorologist_email,
-                password=settings.seed_meteorologist_password,
-                role="METEOROLOGIST",
-                name="Meteorologista Demo",
-            )
-            ensure_user(
-                db,
-                roles,
-                email=settings.seed_user_email,
-                password=settings.seed_user_password,
-                role="USER",
-                name="Usuario Demo",
-            )
-            ensure_demo_weather(db, meteorologist)
-            ensure_demo_education(db, meteorologist)
+        ensure_owner(db, roles, get_settings())
+        ensure_education(db)
         db.commit()
 
 

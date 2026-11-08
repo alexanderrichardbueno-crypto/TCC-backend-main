@@ -13,7 +13,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     source.target = "_blank";
     source.rel = "noopener noreferrer";
     if (/^https?:\/\//.test(item.reference_url)) source.href = item.reference_url;
-    article.append(title, body, source);
+    if (item.media_url) {
+      const image = document.createElement("img");
+      image.src = item.media_url;
+      image.alt = "";
+      image.loading = "lazy";
+      image.className = "edu-figure";
+      article.append(title, image, body, source);
+    } else article.append(title, body, source);
     return article;
   }
 

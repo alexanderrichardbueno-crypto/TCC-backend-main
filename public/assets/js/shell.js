@@ -75,10 +75,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   ];
   if (user && user.role === "USER") links.push(["/perfil.html", "Perfil"]);
   if (user && user.role === "METEOROLOGIST") {
-    links.push(["/profissional.html", "Painel profissional"]);
+    links.push(["/painel.html", "Central meteorológica"]);
   }
-  if (user && user.role === "ADMIN") links.push(["/admin.html", "Contas"]);
-  if (!user) links.push(["/", "Entrar"]);
+  if (!user) links.push(["/index.html", "Entrar"]);
 
   const current = window.location.pathname;
   navigation.replaceChildren();

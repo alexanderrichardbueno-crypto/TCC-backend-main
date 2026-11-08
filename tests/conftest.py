@@ -16,7 +16,8 @@ from app.models import EducationalContent, Forecast, Role, WeatherAlert
 def db(monkeypatch):
     from app.config import get_settings
 
-    monkeypatch.setattr(get_settings(), "seed_demo_data", True)
+    monkeypatch.setattr(get_settings(), "open_meteo_enabled", False)
+    monkeypatch.setattr(get_settings(), "inmet_enabled", False)
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -29,7 +30,6 @@ def db(monkeypatch):
             [
                 Role(code="USER", display_name="Usuário"),
                 Role(code="METEOROLOGIST", display_name="Meteorologista"),
-                Role(code="ADMIN", display_name="Administrador"),
             ]
         )
         now = datetime.now(UTC)
@@ -66,7 +66,6 @@ def db(monkeypatch):
         session.add(
             WeatherAlert(
                 source_key="TEST-ALERT",
-                is_demo=True,
                 title="Tempestade severa",
                 message="Ventos fortes nas proximas horas.",
                 event_type="SEVERE_STORM",
@@ -116,7 +115,8 @@ def client(db: Session):
 
 
 @pytest.fixture()
-def registered_client(client: TestClient):
+def registered_client(client: TestClient, monkeypatch):
+    sent = capture_mail(monkeypatch)
     response = client.post(
         "/api/v1/auth/register",
         json={
@@ -128,7 +128,25 @@ def registered_client(client: TestClient):
         },
     )
     assert response.status_code == 201
+    verify_email(client, sent)
     return client
+
+
+def capture_mail(monkeypatch) -> list[tuple[str, str]]:
+    from app import account_codes
+
+    sent: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        account_codes, "deliver", lambda to, _subject, body: sent.append((to, body))
+    )
+    return sent
+
+
+def verify_email(client: TestClient, sent: list[tuple[str, str]]) -> None:
+    email, body = sent[-1]
+    code = body.split("é ")[1].split(".")[0]
+    response = client.post("/api/v1/auth/verify-email", json={"email": email, "code": code})
+    assert response.status_code == 200
 
 
 def csrf_headers(client: TestClient) -> dict[str, str]:

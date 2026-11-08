@@ -312,7 +312,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .toast.show { display: block; }
 
 .eyebrow { color: var(--yellow); font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
-.demo-chip { background: rgba(255, 194, 38, .12); border: 1px solid rgba(255, 194, 38, .28); border-radius: 999px; color: var(--yellow); display: inline-flex; font-size: 11px; font-weight: 900; margin-bottom: 10px; padding: 5px 9px; text-transform: uppercase; }
 .updated-at { color: var(--muted); font-size: 12px; margin-top: 12px; }
 
 .professional-shell { margin: 0 auto; max-width: 1280px; padding: 30px 24px 80px; }

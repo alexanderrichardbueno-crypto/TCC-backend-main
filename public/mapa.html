@@ -3,20 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="maptiler-key" content="__MAPTILER_KEY__">
   <title>PrevClima · Mapa meteorológico</title>
+  <link rel="icon" href="/assets/img/logo-reserva.svg" type="image/svg+xml">
+  <script src="/assets/js/theme.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
   <link rel="stylesheet" href="/assets/css/weather-map.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous" defer></script>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js" defer></script>
+  <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.3/leaflet-maplibre-gl.js" defer></script>
   <script src="/assets/js/api.js" defer></script>
   <script src="/assets/js/shell.js" defer></script>
-  <script src="/assets/js/map.js" defer></script>
+  <script src="/assets/js/map.js?v=3" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
 </head>
 <body class="weather-map-page">
   <a class="skip-link" href="#map-search">Ir para a busca</a>
   <header class="topbar">
-    <a class="brand" href="/inicio.html"><span class="brand-mark">&#9889;</span> Prev<span>Clima</span></a>
+    <a class="brand" href="/inicio.html"><img class="brand-logo" data-logo src="/marca/logo-small" width="36" height="36" alt=""><span>Prev</span><span>Clima</span></a>
     <nav class="desktop-nav" data-role-navigation aria-label="Navegação principal"></nav>
     <a class="map-back" href="/inicio.html">Voltar ao início <span aria-hidden="true">↗</span></a>
   </header>
@@ -31,7 +41,6 @@
       <div class="map-actions"><button id="map-location" class="button secondary" type="button">◎ Minha localização</button><button id="map-refresh" class="button secondary" type="button">↻ Atualizar</button></div>
       <p id="map-status" class="map-status" role="status" aria-live="polite">Consultando fontes meteorológicas…</p>
       <section id="map-forecast" class="map-forecast" aria-label="Previsão selecionada" aria-live="polite"><p>Buscando a previsão da sua região…</p></section>
-      <details class="map-layers" open><summary>Camadas do mapa</summary><label><input id="forecast-layer" type="checkbox" checked><span class="layer-dot forecast-dot"></span>Previsão pontual</label><label><input id="alert-layer" type="checkbox" checked><span class="layer-dot warning-dot"></span>Áreas de avisos</label><p>A previsão de uma cidade não representa uma área de risco.</p></details>
       <section class="feed-health" aria-label="Estado das fontes"><span class="eyebrow">AVISOS OFICIAIS · INMET</span><p id="feed-status">Verificando sincronização…</p></section>
       <section class="map-warnings" aria-labelledby="map-warning-heading"><div class="map-section-title"><h2 id="map-warning-heading">Avisos no Brasil</h2><span id="map-warning-count">—</span></div><p class="map-list-help">Selecione um aviso para localizar sua área.</p><ul id="map-warning-list" class="map-warning-list"></ul></section>
       <p class="map-source-note">Nenhum aviso disponível não significa ausência de risco. <a href="https://avisos.inmet.gov.br/" target="_blank" rel="noopener noreferrer">Consulte também o INMET ↗</a></p>
@@ -39,8 +48,17 @@
     <section class="map-canvas" aria-label="Visualização geográfica">
       <div id="weather-map" aria-label="Mapa de previsões e avisos meteorológicos"></div>
       <div class="map-canvas-toolbar"><span>PREVISÃO &amp; AVISOS</span><button id="map-fit" type="button">Ver todas as áreas</button></div>
+      <details class="map-show">
+        <summary>Mostrar</summary>
+        <div class="map-show-panel">
+          <label><input id="layer-prev" type="checkbox" checked>Previsão de tempo severo</label>
+          <label><input id="layer-alerta" type="checkbox" checked>Alertas de tempo severo</label>
+          <label><input id="layer-inmHoje" type="checkbox" checked>Avisos do INMET vigentes hoje</label>
+          <label><input id="layer-inmFut" type="checkbox" checked>Avisos do INMET para os próximos dias</label>
+        </div>
+      </details>
       <p id="map-visual-status" class="map-visual-status" hidden role="status"></p>
-      <div class="map-key" aria-label="Legenda"><span><i class="forecast-dot"></i>Previsão</span><span><i style="background:#24875a"></i>Baixo</span><span><i style="background:#d4a017"></i>Moderado</span><span><i style="background:#e57928"></i>Alto</span><span><i style="background:#d84758"></i>Crítico</span></div>
+      <div class="map-key" aria-label="Legenda"><span><i class="forecast-dot"></i>Previsão</span><span><i style="background:#FFFE00"></i>Perigo potencial</span><span><i style="background:#F96602"></i>Perigo</span><span><i style="background:#e3001b"></i>Grande perigo</span></div>
     </section>
   </main>
   <nav class="bottom-nav" aria-label="Navegação principal"><a href="/inicio.html">&#8962;<span>Início</span></a><a href="/alertas.html">!<span>Alertas</span></a><a class="nav-center" href="/inicio.html" aria-label="Previsão atual">&#9928;</a><a class="active" href="/mapa.html" aria-current="page">&#9678;<span>Mapa</span></a><a href="/perfil.html">&#9679;<span>Perfil</span></a></nav>

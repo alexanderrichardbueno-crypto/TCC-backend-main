@@ -6,26 +6,25 @@ leve de desenvolvimento.
 
 ## Recursos concluídos
 
-- Site responsivo em português do Brasil, inspirado no protótipo do Figma.
-- Cadastro público sempre com a função `USER`, definida pelo servidor.
-- Entrada no site para usuário, meteorologista e administrador.
-- Aplicativo móvel instalável em `/mobile/`, exclusivo para contas `USER`; a
-  restrição também é validada pela API em `/api/v1/auth/login-mobile`.
+- Site responsivo em português do Brasil.
+- Cadastro público sempre com a função `USER`, confirmado por código enviado ao e-mail.
+- Dois níveis de acesso: usuário e meteorologista.
+- Aplicativo móvel instalável em `/mobile/` e aplicativo Expo, exclusivos para contas `USER`.
 - Sessão por cookie `HttpOnly`, proteção CSRF, senha Argon2 e revogação de sessão.
-- Perfil, preferências, localização, previsão, avisos, mapa, conteúdo educativo e
-  relatos conectados ao banco.
+- Perfil, preferências, localização, previsão, avisos, mapa e conteúdo educativo conectados ao banco.
 - Previsão atual e diária obtida do Open-Meteo, com geocodificação de cidades,
   cache de 15 minutos e fallback para o último dado salvo.
-- Mapa com previsões pontuais do Open-Meteo separadas dos polígonos de avisos;
-  busca por cidade pública e GPS apenas para contas autenticadas. Se a biblioteca
-  do mapa ou os mosaicos não carregarem, os dados disponíveis aparecem em texto.
-- Meteorologista: emissão direta de avisos, revisão de relatos, sincronização manual de
-  avisos oficiais do INMET e marcação de aviso como alarme falso ou pendente de
-  correção, com histórico de auditoria.
-- Administrador: criação apenas de contas de meteorologista, alteração de função e
-  desativação segura de contas. A desativação preserva o histórico e revoga as
-  sessões existentes.
-- Origem identificada em cada aviso: `DEMO`, `MANUAL` ou `INMET`.
+- Mapa baseado no OpenStreetMap com previsões, alertas e avisos oficiais do INMET.
+- Meteorologista: emissão de previsões e alertas, consulta às estações do INMET,
+  importação BDMEP e gestão de contas, com histórico de auditoria.
+- Origem identificada em cada aviso: `MANUAL` ou `INMET`.
+
+## Aplicativo React Native
+
+O aplicativo nativo fica em `../prevclima-app` (Expo). Ele usa esta mesma API e o mesmo
+banco de dados; não há backend separado. O login `POST /api/v1/auth/login-mobile` devolve
+`access_token`, enviado pelo app em `Authorization: Bearer`. Para o celular acessar a API,
+defina `PREVCLIMA_BIND=0.0.0.0` no `.env`. Instruções em `../prevclima-app/README.md`.
 
 ## Iniciar no Windows 11 com Docker
 
@@ -62,37 +61,20 @@ Endereços com a porta escolhida:
 
 ## Iniciar com dados reais
 
-O `.env.example` agora usa `SEED_DEMO_DATA=false`. Se você já tem um `.env`, altere
-essa variável nele e recrie os serviços com `docker compose up -d --build`.
-Previsões e avisos de demonstração existentes deixam de aparecer nas consultas
-públicas; o histórico e as contas não são apagados. Contas demo antigas continuam
-existindo: desative-as pelo painel antes de usar a instalação fora do ambiente local.
-
-Em um banco novo, crie o primeiro administrador sem dados fictícios:
+Não há contas nem dados meteorológicos de demonstração. Crie a conta principal do dono
+com o nível de meteorologista:
 
 ```bash
-docker compose exec api python -m app.create_admin
+docker compose exec api python -m app.create_owner
 ```
 
-Informe nome, e-mail e senha no terminal. A senha não aparece na tela. O comando
-recusa e-mails já cadastrados e não promove nem modifica contas existentes. Entre
-pelo acesso profissional e cadastre um meteorologista no painel. Usuários comuns
-podem usar o cadastro público. Sem Docker, após as migrações, execute
-`python -m app.seed` para inicializar as funções e `python -m app.create_admin`.
+Sem Docker, após as migrações, execute `python -m app.seed` e `python -m app.create_owner`.
+Outra opção é preencher `OWNER_EMAIL` e `OWNER_PASSWORD` no `.env` antes do seed.
+Entre pela aba Profissional e credencie os demais meteorologistas em Usuários e equipe.
 
-## Contas locais de teste
-
-As contas são inseridas somente quando `SEED_DEMO_DATA=true`. Elas também estão no
-arquivo `CONTAS_DE_TESTE.txt`.
-
-| Perfil | E-mail | Senha local | Onde entra |
-| --- | --- | --- | --- |
-| Administrador | `admin@exemplo.com` | `Admin123!` | Somente site |
-| Meteorologista | `meteorologista@exemplo.com` | `Meteo123!` | Somente site |
-| Usuário | `usuario@exemplo.com` | `Usuario123!` | Site e aplicativo móvel |
-
-Troque as senhas e `JWT_SECRET` antes de qualquer uso fora da demonstração local.
-O modo de produção recusa dados e credenciais de demonstração.
+Para enviar os e-mails de confirmação e de nova senha, preencha `SMTP_HOST`, `SMTP_FROM` e
+as credenciais no `.env`. Sem SMTP, em desenvolvimento, o código aparece no log do servidor;
+em produção o SMTP é obrigatório.
 
 ## Open-Meteo e INMET
 
@@ -191,33 +173,35 @@ regras de integridade. A revisão `3b6f82078bcf` acrescenta `weather_stations` e
 `station_observations`, sem remover contas, previsões ou avisos existentes.
 
 - `migrations/` é a fonte executável e versionada do esquema.
-- A revisão `9d62a8f410be` migra `OWNER` para `ADMIN`, adiciona origem e situação dos
-  avisos, histórico de revisão e eventos de auditoria.
+- A revisão `c7d3f1a90e22` unifica os perfis profissionais, remove dados demonstrativos
+  e cria as previsões de tempo severo e os códigos enviados por e-mail.
 - A revisão `4a8c1e7d2b90` adiciona o link de atribuição da fonte às previsões.
 - A revisão `5f0e7c29b4a1` guarda coordenadas das previsões e permite avisos
   oficiais do INMET sem geometria, preservando-os como informação textual.
 - `banco tcc.sql` e `database/schema.mysql.sql` documentam a estrutura MySQL.
-- `database/demo_seed.sql` contém dados meteorológicos demonstrativos sem senhas.
-- `python -m app.seed` cria funções, contas locais com hash e dados de demonstração
-  de forma repetível.
+- `python -m app.seed` cria as funções, o conteúdo educativo e, se `OWNER_EMAIL` e
+  `OWNER_PASSWORD` estiverem definidos, a conta principal.
 
 ## Painel conectado e importação INMET
 
-`/painel.html`, `/admin.html` e `/profissional.html` abrem a nova central visual,
-adaptada do HTML fornecido. CSS, componentes de interface, mapa e estação foram
-separados em arquivos. Não há sessão, alertas ou contas simulados em localStorage.
-O administrador gerencia contas; o meteorologista emite e revisa avisos e relatos.
-Ambos consultam estações. Autorização e CSRF continuam sendo verificados na API.
-O site e o aplicativo também oferecem consulta pública em `/estacoes.html`, usando
-o mesmo catálogo e histórico persistido.
-O protótipo simulava push e alcance; a versão conectada publica avisos no site e
-no app, sem afirmar entrega de push que não ocorreu.
+`/painel.html` (também `/profissional.html`; `/meteorologista.html`
+redireciona para ele) é a central meteorológica, com login próprio. Arquivos:
+`public/painel.html`, `public/assets/css/painel.css` e `public/assets/js/painel/painel.js`.
+O servidor preenche a chave do MapTiler (`MAPTILER_KEY`; sem chave, o mapa usa o
+OpenFreeMap) e a logo, se existir `public/assets/img/logo.png`. A página tem uma
+política de segurança (CSP) própria, que libera o MapLibre, as fontes, o mapa base e o INMET.
+
+Tudo que a central mostra vem do banco pela rota `GET /api/v1/panel/state`. Previsões
+(`/panel/forecasts`) podem ser editadas ou excluídas por 30 minutos após a emissão; alertas
+(`POST /panel/alerts`, tipos tempestade severa e tornado) não podem ser editados nem excluídos.
+Qualquer meteorologista busca, edita, promove e desativa contas em `/panel/accounts` e
+credencia colegas em `/panel/meteorologists`. Avisos oficiais continuam vindo do INMET.
 
 | Rota | Operação |
 | --- | --- |
 | `GET /api/v1/dashboard` | Contadores e atividade real; acesso profissional |
 | `GET /api/v1/stations` | Catálogo; filtros `state`, `search`, `limit`, `offset` |
-| `POST /api/v1/stations/sync-catalog` | Atualizar catálogo oficial; administrador ou meteorologista |
+| `POST /api/v1/stations/sync-catalog` | Atualizar catálogo oficial; meteorologista |
 | `POST /api/v1/stations/{code}/sync` | Consultar intervalo `{start, end}` de até 31 dias |
 | `GET /api/v1/stations/{code}/observations` | Histórico; filtros `start`, `end`, `period`, `limit`, `offset` |
 | `POST /api/v1/stations/import` | Importação autenticada de histórico (até 2 MB e 10.000 linhas) |

@@ -45,5 +45,5 @@ export function alertCard(a) {
   const color = { LOW: "ok", MODERATE: "mod", HIGH: "high", CRITICAL: "crit" }[
     a.severity
   ];
-  return `<article class="data-card"><div class="row spread"><strong>${esc(a.title)}</strong><span class="pill ${color}">${esc(PrevClima.severityName(a.severity))}</span></div><p>${esc(a.message)}</p><p class="hint">${esc(a.area_name)} · ${esc(a.source_name)}${a.is_demo ? " · DEMONSTRAÇÃO" : ""}</p><p class="hint">Até ${date(a.valid_until)}</p><ul>${a.recommendations.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></article>`;
+  return `<article class="data-card"><div class="row spread"><strong>${esc(a.title)}</strong><span class="pill ${color}">${esc(PrevClima.severityName(a.severity))}</span></div><p>${esc(a.message)}</p><p class="hint">${esc(a.area_name)} · ${esc(a.source_name)}</p><p class="hint">Até ${date(a.valid_until)}</p><ul>${a.recommendations.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></article>`;
 }

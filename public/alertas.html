@@ -4,15 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PrevClima - Alertas</title>
+  <link rel="icon" href="/assets/img/logo-reserva.svg" type="image/svg+xml">
+  <script src="/assets/js/theme.js"></script>
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
   <script src="/assets/js/api.js" defer></script>
   <script src="/assets/js/shell.js" defer></script>
-  <script src="/assets/js/alerts.js" defer></script>
+  <script src="/assets/js/alerts.js?v=3" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/inicio.html"><span class="brand-mark">&#9889;</span> Prev<span>Clima</span></a>
+    <a class="brand" href="/inicio.html"><img class="brand-logo" data-logo src="/marca/logo-small" width="36" height="36" alt=""><span>Prev</span><span>Clima</span></a>
     <nav class="desktop-nav" data-role-navigation aria-label="Navegação principal"></nav>
     <span class="role-identity" data-role-identity></span>
   </header>
@@ -25,8 +31,6 @@
     <section id="alert-list" class="alert-list" aria-live="polite">
       <p class="loading">Consultando alertas...</p>
     </section>
-    <a class="button secondary report-link" href="/relato.html">Enviar relato de tempo severo ↗</a>
-    <p class="report-note muted">Sua contribuição ajuda a equipe a acompanhar o tempo na região.</p>
   </main>
   <nav class="bottom-nav" aria-label="Navegação principal">
     <a href="/inicio.html">&#8962;<span>Início</span></a>

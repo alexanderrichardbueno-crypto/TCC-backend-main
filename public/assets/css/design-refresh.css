@@ -181,7 +181,6 @@ dialog.modal { width: 100%; max-width: none; height: 100%; max-height: none; bor
 .alert-summary strong { border-radius: 50%; }
 .recommendations { border-radius: 16px; }
 .confirmed-location { border-radius: 18px; }
-.report-link { margin-top: 22px; }
 .report-note { font-size: 12px; text-align: center; }
 .profile-page .profile-summary, .profile-page .settings-panel { border-radius: 18px; }
 .profile-page .profile-summary { background: #213451; }

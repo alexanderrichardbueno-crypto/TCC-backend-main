@@ -15,13 +15,18 @@ class Settings(BaseSettings):
     jwt_ttl_minutes: int = 60
     cookie_secure: bool = False
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:8000"]
-    seed_demo_data: bool = False
-    seed_admin_email: str | None = None
-    seed_admin_password: str | None = None
-    seed_meteorologist_email: str | None = None
-    seed_meteorologist_password: str | None = None
-    seed_user_email: str | None = None
-    seed_user_password: str | None = None
+    # Conta principal do dono (RF03): criada no banco ao rodar o seed, se informada.
+    owner_name: str = "Conta principal"
+    owner_email: str | None = None
+    owner_password: str | None = None
+    # Envio de e-mail (confirmação de cadastro e redefinição de senha).
+    # Sem SMTP_HOST, fora de produção, o código é exibido no log do servidor.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_starttls: bool = True
     inmet_observations_enabled: bool = False
     inmet_station_codes: list[str] = Field(default_factory=list, max_length=50)
     inmet_enabled: bool = False
@@ -38,6 +43,9 @@ class Settings(BaseSettings):
     open_meteo_cache_minutes: int = Field(default=15, ge=1, le=1440)
     open_meteo_stale_hours: int = Field(default=24, ge=1, le=168)
     open_meteo_user_agent: str = "PrevClima/0.1 (integracao academica)"
+    # Chave pública do MapTiler para o mapa do painel (restrinja ao domínio no MapTiler).
+    # Sem chave, o painel usa o OpenFreeMap.
+    maptiler_key: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -76,8 +84,8 @@ class Settings(BaseSettings):
             raise RuntimeError("Configure um banco de producao em vez do SQLite")
         if "*" in self.cors_origins:
             raise RuntimeError("Origem CORS curinga nao e permitida em producao")
-        if self.seed_demo_data:
-            raise RuntimeError("SEED_DEMO_DATA deve estar desabilitado em producao")
+        if not self.smtp_host or not self.smtp_from:
+            raise RuntimeError("Configure SMTP_HOST e SMTP_FROM para enviar os e-mails em producao")
         if self.inmet_enabled and not self.inmet_warning_rss_url.startswith("https://"):
             raise RuntimeError("A URL do INMET deve usar HTTPS em producao")
         if self.open_meteo_enabled and not (

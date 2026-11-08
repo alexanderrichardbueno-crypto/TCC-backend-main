@@ -14,7 +14,15 @@ from pydantic import (
     model_validator,
 )
 
-PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,128}$")
+# RNF01: pelo menos 6 caracteres, com uma letra maiúscula e um caractere especial.
+PASSWORD_PATTERN = re.compile(r"^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{6,128}$")
+PASSWORD_MESSAGE = "a senha precisa de 6 caracteres, uma letra maiúscula e um caractere especial"
+
+
+def check_password(value: str) -> str:
+    if not PASSWORD_PATTERN.match(value):
+        raise ValueError(PASSWORD_MESSAGE)
+    return value
 
 
 def utc_iso(value: datetime) -> str:
@@ -59,7 +67,7 @@ class RegisterRequest(BaseModel):
 
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
+    password: str = Field(min_length=1, max_length=128)
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
 
@@ -76,9 +84,7 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if not PASSWORD_PATTERN.match(value):
-            raise ValueError("use letras maiúsculas e minúsculas, número e caractere especial")
-        return value
+        return check_password(value)
 
     @model_validator(mode="after")
     def location_pair(self):
@@ -94,14 +100,28 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
-class StaffCreateRequest(RegisterRequest):
-    role: Literal["METEOROLOGIST"]
+class RegisterOut(BaseModel):
+    message: str
+    email: EmailStr
 
 
-class RoleUpdateRequest(BaseModel):
+class EmailRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    role: Literal["USER", "METEOROLOGIST"]
+    email: EmailStr
+
+
+class VerifyEmailRequest(EmailRequest):
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class ResetPasswordRequest(VerifyEmailRequest):
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return check_password(value)
 
 
 class UserOut(BaseModel):
@@ -128,6 +148,9 @@ class UserOut(BaseModel):
 class AuthResponse(BaseModel):
     user: UserOut
     csrf_token: str
+    # Preenchido apenas no login do aplicativo nativo (React Native), que usa
+    # o cabeçalho Authorization: Bearer em vez de cookies.
+    access_token: str | None = None
 
 
 class ProfileUpdate(BaseModel):
@@ -207,7 +230,6 @@ class AlertOut(BaseModel):
     severity: str
     area_name: str
     recommendations: list[str]
-    is_demo: bool
     origin: str
     source_name: str
     source_url: str | None
@@ -228,7 +250,7 @@ class AlertCreateRequest(BaseModel):
 
     title: str = Field(min_length=3, max_length=140)
     message: str = Field(min_length=10, max_length=5000)
-    event_type: Literal["SEVERE_STORM", "TORNADO", "WINDSTORM", "HEAVY_RAIN"]
+    event_type: Literal["SEVERE_STORM", "TORNADO"]
     severity: Literal["LOW", "MODERATE", "HIGH", "CRITICAL"]
     area_name: str = Field(min_length=2, max_length=160)
     latitude: Decimal | None = Field(default=None, ge=-90, le=90)
@@ -317,9 +339,30 @@ class HomeOut(BaseModel):
     warning_feed: WarningFeedOut
 
 
+class NearbyForecastOut(BaseModel):
+    id: int
+    level: int
+    level_name: str
+    severity: str
+    description: str
+    issued_at: datetime
+    valid_until: datetime
+
+    @field_serializer("issued_at", "valid_until")
+    def serialize_datetimes(self, value: datetime) -> str:
+        return utc_iso(value)
+
+
+class NearbyAlertsOut(BaseModel):
+    location: str | None
+    alerts: list[AlertOut]
+    forecasts: list[NearbyForecastOut]
+
+
 class MapAlertOut(BaseModel):
     id: int
     title: str
+    message: str
     event_type: str
     severity: str
     area_name: str
@@ -327,7 +370,6 @@ class MapAlertOut(BaseModel):
     longitude: Decimal | None
     radius_km: Decimal | None
     polygon: dict | None
-    is_demo: bool
     origin: str
     source_name: str
     source_url: str | None
@@ -377,13 +419,22 @@ class MapForecastPointOut(BaseModel):
 class MapDataOut(BaseModel):
     warning_feed: WarningFeedOut
     alerts: list[MapAlertOut]
+    # Avisos oficiais que ainda vão começar ("próximos dias" no mapa).
+    upcoming_alerts: list[MapAlertOut] = Field(default_factory=list)
     forecast_areas: list[MapForecastOut]
     forecast_points: list[MapForecastPointOut] = Field(default_factory=list)
+    # Áreas de previsão e de alerta publicadas pelo painel dos meteorologistas (GeoJSON).
+    published_areas: list[dict] = Field(default_factory=list)
+    published_areas_at: datetime | None = None
     generated_at: datetime
 
     @field_serializer("generated_at")
     def serialize_generated_at(self, value: datetime) -> str:
         return utc_iso(value)
+
+    @field_serializer("published_areas_at")
+    def serialize_published_at(self, value: datetime | None) -> str | None:
+        return utc_iso(value) if value else None
 
 
 class EducationalContentOut(BaseModel):
@@ -399,60 +450,6 @@ class EducationalContentOut(BaseModel):
     @field_serializer("published_at")
     def serialize_published_at(self, value: datetime) -> str:
         return utc_iso(value)
-
-
-class WeatherReportCreateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    description: str = Field(min_length=10, max_length=2000)
-    occurred_at: datetime
-    latitude: Decimal = Field(ge=-90, le=90)
-    longitude: Decimal = Field(ge=-180, le=180)
-    image_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
-
-    @field_validator("description", mode="before")
-    @classmethod
-    def clean_description(cls, value: object) -> object:
-        return " ".join(value.split()) if isinstance(value, str) else value
-
-    @field_validator("occurred_at")
-    @classmethod
-    def occurrence_not_in_future(cls, value: datetime) -> datetime:
-        normalized = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
-        if normalized > datetime.now(UTC):
-            raise ValueError("a data da ocorrência não pode estar no futuro")
-        return normalized
-
-
-class WeatherReportReviewRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    status: Literal["APPROVED", "REJECTED"]
-    review_notes: str | None = Field(default=None, max_length=2000)
-
-    @field_validator("review_notes")
-    @classmethod
-    def clean_notes(cls, value: str | None) -> str | None:
-        return " ".join(value.split()) if value else value
-
-
-class WeatherReportOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    description: str
-    occurred_at: datetime
-    latitude: Decimal
-    longitude: Decimal
-    image_url: str | None
-    status: str
-    review_notes: str | None
-    reviewed_at: datetime | None
-    created_at: datetime
-
-    @field_serializer("occurred_at", "reviewed_at", "created_at")
-    def serialize_datetimes(self, value: datetime | None) -> str | None:
-        return utc_iso(value) if value else None
 
 
 class MessageOut(BaseModel):

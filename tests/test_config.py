@@ -18,6 +18,8 @@ def test_production_rejects_development_defaults():
         app_env="production",
         database_url="mysql+pymysql://user:pass@db/prevclima",
         cookie_secure=True,
+        smtp_host="smtp.example",
+        smtp_from="prevclima@example.com",
     )
     with pytest.raises(RuntimeError, match="JWT_SECRET"):
         settings.validate_production()
@@ -29,6 +31,8 @@ def test_production_accepts_explicit_safe_settings():
         database_url="mysql+pymysql://user:pass@db/prevclima",
         jwt_secret="a-unique-production-secret-that-is-long-enough",
         cookie_secure=True,
+        smtp_host="smtp.example",
+        smtp_from="prevclima@example.com",
         cors_origins=["https://prevclima.example"],
     )
     settings.validate_production()
@@ -39,6 +43,8 @@ def test_production_rejects_example_secret():
         app_env="production",
         database_url="mysql+pymysql://user:pass@db/prevclima",
         cookie_secure=True,
+        smtp_host="smtp.example",
+        smtp_from="prevclima@example.com",
         jwt_secret="replace-with-at-least-32-random-characters",
     )
     with pytest.raises(RuntimeError, match="JWT_SECRET"):

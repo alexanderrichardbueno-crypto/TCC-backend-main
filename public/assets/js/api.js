@@ -6,8 +6,6 @@
     "Invalid email or password": "E-mail ou senha inválidos.",
     "Professional access required": "Esta área é exclusiva para contas profissionais.",
     "Database roles are not initialized": "Os perfis de acesso ainda não foram configurados.",
-    "Report not found": "Relato não encontrado.",
-    "Report already reviewed": "Este relato já foi analisado.",
     "Alert not found": "Alerta não encontrado.",
     "No current forecast": "Não há previsão atual para esta localidade.",
     "User not found": "Usuário não encontrado.",
@@ -72,14 +70,13 @@
   }
 
   function applyTheme(user) {
-    if (user) document.documentElement.classList.toggle("light", !user.dark_theme);
+    if (user && window.PrevClimaTheme) PrevClimaTheme.set(user.dark_theme ? "dark" : "light");
   }
 
   function roleName(role) {
     return {
       USER: "Usuário",
       METEOROLOGIST: "Meteorologista",
-      ADMIN: "Administrador",
     }[role] || role;
   }
 

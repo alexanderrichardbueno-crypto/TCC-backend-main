@@ -48,6 +48,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       window.location.assign("/mobile/inicio.html");
     } catch (error) {
+      if (error.message === "Confirme seu e-mail antes de entrar") {
+        const email = encodeURIComponent(loginForm.elements["email"].value.trim());
+        window.location.assign(`/confirmar-email.html?app=1&email=${email}`);
+        return;
+      }
       message.textContent = error.message;
       PrevClima.setBusy(button, false);
     }
@@ -60,25 +65,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     message.textContent = "";
     PrevClima.setBusy(button, true);
     try {
-      const result = await PrevClima.request("/auth/register", {
+      const email = registerForm.elements["email"].value.trim();
+      await PrevClima.request("/auth/register", {
         method: "POST",
         body: JSON.stringify({
           name: registerForm.elements["name"].value.trim(),
-          email: registerForm.elements["email"].value.trim(),
+          email,
           password: registerForm.elements["password"].value,
           city: null,
           state: null,
         }),
       });
-      if (result.user.role !== "USER") throw new Error("O aplicativo aceita somente contas de usuário.");
-      await PrevClima.request("/auth/login-mobile", {
-        method: "POST",
-        body: JSON.stringify({
-          email: registerForm.elements["email"].value.trim(),
-          password: registerForm.elements["password"].value,
-        }),
-      });
-      window.location.assign("/mobile/inicio.html");
+      window.location.assign(`/confirmar-email.html?app=1&email=${encodeURIComponent(email)}`);
     } catch (error) {
       message.textContent = error.message;
       PrevClima.setBusy(button, false);

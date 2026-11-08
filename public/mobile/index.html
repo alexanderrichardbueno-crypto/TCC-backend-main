@@ -5,16 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#081a36">
   <title>PrevClima Móvel</title>
+  <script src="/assets/js/theme.js"></script>
   <link rel="manifest" href="/mobile/manifest.webmanifest">
   <link rel="icon" href="/mobile/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/mobile/mobile.css">
   <script src="/assets/js/api.js" defer></script>
   <script src="/mobile/mobile.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
 </head>
 <body class="mobile-auth">
   <main class="mobile-frame mobile-auth-frame">
     <header class="mobile-brand">
-      <div class="mobile-brand-mark"><img src="/mobile/icon.svg" alt="" width="72" height="72"></div>
+      <div class="mobile-brand-mark"><img data-logo src="/marca/logo" alt="" width="72" height="72"></div>
       <h1>Prev<span>Clima</span></h1>
       <p>O tempo muda. Você se antecipa.</p>
     </header>
@@ -33,18 +38,19 @@
         <label>Senha<input name="password" type="password" autocomplete="current-password" required></label>
         <p class="mobile-message" role="alert" aria-live="assertive"></p>
         <button class="mobile-primary" type="submit">Entrar no aplicativo <span aria-hidden="true">→</span></button>
+        <a class="mobile-site-link" href="/recuperar-senha.html?app=1">Esqueci minha senha</a>
       </form>
       <form id="mobile-register-form" role="tabpanel" aria-labelledby="show-register" hidden>
-        <label>Nome completo<input name="name" minlength="2" maxlength="120" autocomplete="name" placeholder="Seu nome" required></label>
+        <label>Nome de usuário<input name="name" minlength="2" maxlength="120" autocomplete="name" placeholder="Seu nome" required></label>
         <label>E-mail<input name="email" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com" required></label>
-        <label>Senha<input name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
-        <p class="mobile-helper">Use letras maiúsculas e minúsculas, número e símbolo.</p>
+        <label>Senha<input name="password" type="password" minlength="6" maxlength="128" autocomplete="new-password" required></label>
+        <p class="mobile-helper">Mínimo de 6 caracteres, com pelo menos uma letra maiúscula e um caractere especial.</p>
         <p class="mobile-message" role="alert" aria-live="assertive"></p>
         <button class="mobile-primary" type="submit">Criar minha conta <span aria-hidden="true">→</span></button>
       </form>
     </section>
-    <div class="mobile-access-note"><span aria-hidden="true">✦</span><p>Este aplicativo é para usuários. Meteorologistas e administradores acessam pelo site.</p></div>
-    <a class="mobile-site-link" href="/">Ir para a versão do site <span aria-hidden="true">↗</span></a>
+    <div class="mobile-access-note"><span aria-hidden="true">✦</span><p>Este aplicativo é para usuários. Meteorologistas acessam pela central do site.</p></div>
+    <a class="mobile-site-link" href="/index.html">Ir para a versão do site <span aria-hidden="true">↗</span></a>
   </main>
 </body>
 </html>

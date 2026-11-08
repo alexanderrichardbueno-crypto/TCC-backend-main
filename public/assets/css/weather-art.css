@@ -1,0 +1,37 @@
+/* Ilustração animada do tempo na tela Início. */
+:root .weather-home-page .weather-icon { filter: drop-shadow(0 14px 26px rgba(0, 10, 50, .45)); font-size: 150px; line-height: 1; margin: 0; right: 5%; top: 62px; width: clamp(190px, 25vw, 300px); }
+.weather-icon svg { display: block; height: auto; overflow: visible; width: 100%; }
+.weather-icon svg * { transform-box: fill-box; transform-origin: center; }
+
+.wa-spin { animation: wa-spin 22s linear infinite; }
+.wa-pulse { animation: wa-pulse 3.6s ease-in-out infinite; }
+.wa-float { animation: wa-float 6s ease-in-out infinite; }
+.wa-float-slow { animation: wa-float-slow 9s ease-in-out infinite; }
+.wa-twinkle { animation: wa-twinkle 2.4s ease-in-out infinite; }
+.wa-drop { animation: wa-drop .85s linear infinite; }
+.wa-hail { animation: wa-hail 1.05s cubic-bezier(.5, 0, 1, .7) infinite; }
+.wa-snow { animation: wa-snow 3.2s linear infinite; }
+.wa-fog { animation: wa-fog 5s ease-in-out infinite; }
+.wa-bolt { animation: wa-bolt 3.4s linear infinite; opacity: 0; }
+.wa-bolt-late { animation-delay: 1.5s; }
+.wa-sky-flash { animation: wa-sky 3.4s linear infinite; opacity: 0; }
+
+@keyframes wa-spin { to { rotate: 360deg; } }
+@keyframes wa-pulse { 50% { opacity: .55; scale: 1.08; } }
+@keyframes wa-float { 50% { translate: 9px 0; } }
+@keyframes wa-float-slow { 50% { translate: -8px 0; } }
+@keyframes wa-twinkle { 50% { opacity: .25; } }
+@keyframes wa-drop { 0% { opacity: 0; translate: 0 -8px; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; translate: -11px 52px; } }
+@keyframes wa-hail { 0% { opacity: 0; translate: 0 -8px; } 12% { opacity: 1; } 80% { opacity: 1; translate: -5px 50px; } 90% { translate: -5px 40px; } 100% { opacity: 0; translate: -5px 50px; } }
+@keyframes wa-snow { 0% { opacity: 0; translate: 0 -6px; rotate: 0deg; } 15% { opacity: 1; } 50% { translate: 7px 24px; } 85% { opacity: 1; } 100% { opacity: 0; translate: -3px 54px; rotate: 180deg; } }
+@keyframes wa-fog { 50% { opacity: .45; translate: 16px 0; } }
+@keyframes wa-bolt { 0%, 8% { opacity: 0; translate: 0 -24px; } 10% { opacity: 1; translate: 0 0; } 13% { opacity: .25; } 15% { opacity: 1; } 22% { opacity: 1; } 28%, 100% { opacity: 0; translate: 0 8px; } }
+@keyframes wa-sky { 0%, 8% { opacity: 0; } 10% { opacity: .9; } 13% { opacity: .2; } 15% { opacity: .75; } 30%, 100% { opacity: 0; } }
+
+@media (max-width: 720px) {
+  :root .weather-home-page .weather-icon { margin: 4px auto 0; position: static; width: min(62vw, 230px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .weather-icon svg * { animation: none !important; }
+  .wa-bolt { opacity: 1; }
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrevClima - Redefinir senha</title>
+  <link rel="icon" href="/assets/img/logo-reserva.svg" type="image/svg+xml">
+  <script src="/assets/js/theme.js"></script>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="/assets/css/design-refresh.css">
+  <script src="/assets/js/api.js" defer></script>
+  <script src="/assets/js/account-code.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
+</head>
+<body class="auth-page" data-flow="reset">
+  <main class="auth-shell">
+    <div class="auth-form-column">
+    <header class="auth-brand">
+      <div class="login-wordmark"><img data-logo src="/marca/logo" width="42" height="42" alt=""><h1>Prev<span>Clima</span></h1></div>
+      <p>Redefina sua senha</p>
+    </header>
+    <section class="auth-card">
+      <form id="request-form">
+        <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+        <p id="request-message" class="error" role="alert"></p>
+        <button class="button" type="submit">Enviar código</button>
+      </form>
+      <form id="code-form" hidden>
+        <div class="field"><label for="code">Código recebido por e-mail</label><input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></div>
+        <div class="field"><label for="password">Nova senha</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required><span class="helper">Mínimo de 6 caracteres, com pelo menos uma letra maiúscula e um caractere especial.</span></div>
+        <p id="form-message" class="error" role="alert"></p>
+        <button class="button" type="submit">Redefinir senha</button>
+      </form>
+    </section>
+    <a class="guest-link" href="/index.html">Voltar para o acesso</a>
+    </div>
+  </main>
+</body>
+</html>

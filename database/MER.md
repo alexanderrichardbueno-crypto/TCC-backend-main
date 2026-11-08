@@ -135,7 +135,7 @@ erDiagram
 | Observação | Chave natural única `(station_code, observed_at, period)`. Período `HOURLY`, `DAILY` ou `MONTHLY`; UTC no armazenamento e na API. |
 | Medidas | Temperatura em °C, umidade em %, precipitação em mm e vento em m/s. Campo ausente ou sentinela `-9999` vira `NULL`, nunca zero. |
 | Previsão | Produto previsto, separado da medição observada. A probabilidade de chuva não é inferida de precipitação medida. |
-| Aviso | Origem `INMET`, `MANUAL` ou `DEMO`; validade e situação de revisão independentes. |
+| Aviso | Origem `INMET` ou `MANUAL`; validade e situação de revisão independentes. |
 | Revisão | Registra autor, motivo, situação anterior e nova. Não apaga o alerta. |
 | Leitura | Restrição única `(user_id, alert_id)`. |
 | Auditoria | `target_type` + `target_id` identificam vários tipos de entidade e não são uma chave estrangeira. |

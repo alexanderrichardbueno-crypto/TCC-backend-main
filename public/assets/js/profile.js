@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     render(await PrevClima.request("/users/me"));
   } catch (error) {
-    if (error.status === 401) window.location.replace("/?next=/perfil.html");
+    if (error.status === 401) window.location.replace("/index.html?next=/perfil.html");
     else message.textContent = error.message;
     return;
   }
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       await PrevClima.request("/auth/logout", { method: "POST" });
     } finally {
-      window.location.assign("/");
+      window.location.assign("/index.html");
     }
   });
 });

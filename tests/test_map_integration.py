@@ -202,6 +202,35 @@ def test_map_omits_historic_point_without_coordinates_if_provider_unavailable(
     assert result.json()["forecast_areas"][0]["source_name"] == "TEST DATA"
 
 
+def test_map_excludes_future_and_expired_warnings(client: TestClient, db, monkeypatch):
+    mocked_map_provider(monkeypatch, lambda _: httpx.Response(503), enabled=False)
+    now = datetime.now(UTC)
+    for source_key, start, end in (
+        ("TEST-FUTURE-ALERT", now + timedelta(hours=1), now + timedelta(hours=3)),
+        ("TEST-EXPIRED-ALERT", now - timedelta(hours=3), now - timedelta(hours=1)),
+    ):
+        db.add(
+            WeatherAlert(
+                source_key=source_key,
+                title=source_key,
+                message="Aviso de teste sem atividade",
+                event_type="SEVERE_STORM",
+                severity="HIGH",
+                area_name="Santos",
+                latitude=-23.96,
+                longitude=-46.33,
+                radius_km=10,
+                recommendations=[],
+                issued_at=start,
+                valid_until=end,
+            )
+        )
+    db.commit()
+    titles = [item["title"] for item in client.get("/api/v1/map-data").json()["alerts"]]
+    assert "TEST-FUTURE-ALERT" not in titles
+    assert "TEST-EXPIRED-ALERT" not in titles
+
+
 def test_map_inmet_warning_uses_its_real_polygon_and_source(client: TestClient, db, monkeypatch):
     mocked_map_provider(monkeypatch, lambda _: httpx.Response(503), enabled=False)
     feed = InmetClient(
@@ -216,7 +245,6 @@ def test_map_inmet_warning_uses_its_real_polygon_and_source(client: TestClient, 
     item = next(alert for alert in map_result.json()["alerts"] if alert["origin"] == "INMET")
     assert item["polygon"]["type"] == "Polygon"
     assert item["source_url"] == "https://avisos.inmet.gov.br/123"
-    assert item["is_demo"] is False
     assert item["radius_km"] is None
 
     # A reviewed false alarm disappears from the public map without deleting provenance.
@@ -257,38 +285,8 @@ def test_geometryless_inmet_warning_is_listed_without_inventing_a_map_area(
     assert warning["longitude"] is None
     assert warning["radius_km"] is None
     assert warning["source_url"] == "https://avisos.inmet.gov.br/123"
-    assert warning["is_demo"] is False
     assert all(area["source_name"] != "INMET" for area in map_data["forecast_areas"])
 
     listed = client.get("/api/v1/alerts")
     assert listed.status_code == 200
     assert [item["id"] for item in listed.json() if item["origin"] == "INMET"] == [warning["id"]]
-
-
-def test_map_excludes_future_and_expired_warnings(client: TestClient, db, monkeypatch):
-    mocked_map_provider(monkeypatch, lambda _: httpx.Response(503), enabled=False)
-    now = datetime.now(UTC)
-    for source_key, start, end in (
-        ("TEST-FUTURE-ALERT", now + timedelta(hours=1), now + timedelta(hours=3)),
-        ("TEST-EXPIRED-ALERT", now - timedelta(hours=3), now - timedelta(hours=1)),
-    ):
-        db.add(
-            WeatherAlert(
-                source_key=source_key,
-                title=source_key,
-                message="Aviso de teste sem atividade",
-                event_type="SEVERE_STORM",
-                severity="HIGH",
-                area_name="Santos",
-                latitude=-23.96,
-                longitude=-46.33,
-                radius_km=10,
-                recommendations=[],
-                issued_at=start,
-                valid_until=end,
-            )
-        )
-    db.commit()
-    titles = [item["title"] for item in client.get("/api/v1/map-data").json()["alerts"]]
-    assert "TEST-FUTURE-ALERT" not in titles
-    assert "TEST-EXPIRED-ALERT" not in titles

@@ -111,9 +111,7 @@ class Forecast(Base):
     severity: Mapped[str] = mapped_column(String(24), default="LOW", nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     polygon: Mapped[dict | None] = mapped_column(JSON)
-    source_name: Mapped[str] = mapped_column(
-        String(120), default="Dados demonstrativos", nullable=False
-    )
+    source_name: Mapped[str] = mapped_column(String(120), default="PrevClima", nullable=False)
     source_url: Mapped[str | None] = mapped_column(String(500))
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -148,7 +146,7 @@ class WeatherAlert(Base):
             name="ck_alert_validation_status",
         ),
         CheckConstraint(
-            "origin IN ('DEMO', 'MANUAL', 'INMET')",
+            "origin IN ('MANUAL', 'INMET')",
             name="ck_alert_origin",
         ),
         Index("ix_alerts_active", "valid_until", "severity"),
@@ -157,7 +155,6 @@ class WeatherAlert(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source_key: Mapped[str | None] = mapped_column(String(80), unique=True)
-    is_demo: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     origin: Mapped[str] = mapped_column(String(16), default="MANUAL", nullable=False)
     source_name: Mapped[str] = mapped_column(String(120), default="PrevClima", nullable=False)
@@ -180,6 +177,10 @@ class WeatherAlert(Base):
     recommendations: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Encerramento manual pelo painel: o aviso deixa de valer antes do prazo.
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Exclusão pelo painel: some das consultas, mas o registro e a auditoria permanecem.
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
@@ -257,34 +258,6 @@ class News(Base):
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class WeatherReport(Base):
-    __tablename__ = "weather_reports"
-    __table_args__ = (
-        CheckConstraint("latitude BETWEEN -90 AND 90", name="ck_report_lat"),
-        CheckConstraint("longitude BETWEEN -180 AND 180", name="ck_report_lon"),
-        CheckConstraint("status IN ('PENDING', 'APPROVED', 'REJECTED')", name="ck_report_status"),
-        Index("ix_reports_review_queue", "status", "created_at"),
-        Index("ix_reports_reporter_created", "reporter_id", "created_at"),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    reporter_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
-    )
-    reviewer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
-    description: Mapped[str] = mapped_column(Text, nullable=False)
-    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    latitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False)
-    longitude: Mapped[Decimal] = mapped_column(Numeric(9, 6), nullable=False)
-    image_url: Mapped[str | None] = mapped_column(String(500))
-    status: Mapped[str] = mapped_column(String(24), default="PENDING", nullable=False)
-    review_notes: Mapped[str | None] = mapped_column(Text)
-    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
-    )
-
-
 class EducationalContent(Base):
     __tablename__ = "educational_contents"
     __table_args__ = (Index("ix_education_published", "published_at"),)
@@ -297,3 +270,46 @@ class EducationalContent(Base):
     media_url: Mapped[str | None] = mapped_column(String(500))
     reference_url: Mapped[str] = mapped_column(String(500), nullable=False)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class SevereForecast(Base):
+    """Previsão de tempo severo emitida por um meteorologista (UC005 a UC007)."""
+
+    __tablename__ = "severe_forecasts"
+    __table_args__ = (
+        CheckConstraint("level BETWEEN 0 AND 4", name="ck_severe_forecast_level"),
+        CheckConstraint("valid_until > issued_at", name="ck_severe_forecast_validity"),
+        Index("ix_severe_forecasts_valid", "valid_until"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    level: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str] = mapped_column(String(500), nullable=False)
+    polygon: Mapped[dict] = mapped_column(JSON, nullable=False)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    # Início da janela de 30 minutos para editar ou excluir: o momento real da emissão no sistema.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class AccountCode(Base):
+    """Código enviado por e-mail para confirmar o cadastro ou redefinir a senha."""
+
+    __tablename__ = "account_codes"
+    __table_args__ = (
+        CheckConstraint("purpose IN ('VERIFY_EMAIL', 'RESET_PASSWORD')", name="ck_code_purpose"),
+        Index("ix_account_codes_user_purpose", "user_id", "purpose"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(16), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )

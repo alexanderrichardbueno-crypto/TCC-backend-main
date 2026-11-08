@@ -13,7 +13,29 @@ class Element {
   get text() { return this.textContent + this.children.map((c) => c.text ?? c).join(' '); }
 }
 const flush = () => new Promise(setImmediate);
-async function setup() {
+// Leaflet mínimo: registra o que foi desenhado em cada camada.
+function fakeLeaflet() {
+  const chain = () => ({ addTo() { return this; }, on() { return this; } });
+  const group = () => ({ items: [], addTo() { return this; }, removeFrom() { return this; },
+    clearLayers() { this.items = []; }, getLayers() { return this.items; } });
+  const groups = [];
+  const shape = (kind, geometry, options) => ({ kind, geometry, options,
+    bindPopup(content) { this.popup = content; return this; },
+    addTo(layer) { layer.items.push(this); return this; } });
+  return {
+    groups,
+    L: {
+      map: () => ({ setView() { return this; }, fitBounds() {}, invalidateSize() {}, createPane: () => ({ style: {} }) }),
+      control: { zoom: chain }, tileLayer: chain,
+      layerGroup: () => { const g = group(); groups.push(g); return g; },
+      geoJSON: (geometry, options) => shape('geojson', geometry, options),
+      circle: (center, options) => shape('circle', center, options),
+      circleMarker: (center, options) => shape('marker', center, options),
+      featureGroup: () => ({ getBounds: () => ({ isValid: () => false }) }),
+    },
+  };
+}
+async function setup(leaflet) {
   const nodes = new Map();
   const node = (id) => { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); };
   const form = node('#map-search');
@@ -23,7 +45,7 @@ async function setup() {
   const context = {
     document: { querySelector: node, createElement: () => new Element(), hidden: false,
       addEventListener: (name, fn) => { if (name === 'DOMContentLoaded') ready = fn; } },
-    window: { location: { search: '' } }, navigator: { geolocation: {} },
+    window: { location: { search: '' }, L: leaflet }, L: leaflet, navigator: { geolocation: {} },
     URL, URLSearchParams, Date, Map, Option: class extends Element {}, setInterval() {},
     PrevClima: {
       request: (url) => new Promise((resolve, reject) => requests.push({ url, resolve, reject })),
@@ -52,7 +74,7 @@ test('missing Leaflet keeps city search, forecast and text-only warning usable',
   assert.match(node('#map-forecast').text, /Mongaguá/);
   assert.match(node('#map-warning-list').text, /sem delimitação/);
   assert.equal(node('#map-fit').disabled, true);
-  assert.equal(node('#forecast-layer').disabled, true);
+  assert.equal(node('#layer-prev').disabled, true);
   // The external title remains text; untrusted source links are never emitted.
   assert.match(node('#map-warning-list').text, /<script>untrusted<\/script>/);
   assert.equal(node('#map-warning-list').children[0].children.some((x) => x.href), false);
@@ -92,12 +114,36 @@ test('failed refresh labels saved forecast and removes expired warnings', async 
   assert.equal(node('#map-refresh').disabled, false);
 });
 
+test('areas published in the panel are drawn in the forecast and alert layers', async () => {
+  const fake = fakeLeaflet();
+  const { requests } = await setup(fake.L);
+  const square = { type: 'Polygon', coordinates: [[[-47, -24], [-46, -24], [-46, -23], [-47, -24]]] };
+  const payload = data();
+  payload.published_areas_at = new Date().toISOString();
+  payload.published_areas = [
+    { type: 'Feature', properties: { id: 2, nome: 'Alerta de tornado – Santos', tipo: 'alerta', alerta: 'tornado' }, geometry: square },
+    { type: 'Feature', properties: { id: 1, nome: 'Previsão nível 3 – Santos', tipo: 'previsao', nivel: 3 }, geometry: square },
+    { type: 'Feature', properties: { id: 3, nome: 'Previsão T', tipo: 'previsao', nivel: 'T' }, geometry: square },
+  ];
+  requests[0].resolve(payload);
+  await flush();
+  const [forecastLayer, alertLayer] = fake.groups;
+  const forecastAreas = forecastLayer.items.filter((x) => x.kind === 'geojson');
+  // nível mais alto desenhado por último (fica por cima)
+  assert.deepEqual(forecastAreas.map((x) => x.options.style.color), ['#39ff14', '#ff2a2a']);
+  assert.match(forecastAreas[1].popup.text, /Previsão nível 3 – Santos/);
+  assert.match(forecastAreas[1].popup.text, /Nível 3/);
+  assert.equal(alertLayer.items.length, 1);
+  assert.equal(alertLayer.items[0].options.style.color, '#d2142a');
+  assert.match(alertLayer.items[0].popup.text, /Alerta de tornado/);
+});
+
 test('GPS asks for login without invoking geolocation for anonymous visitors', async () => {
   const { node, requests } = await setup();
   const pending = node('#map-location').events.click();
   requests[1].reject(Object.assign(new Error('Login'), { status: 401 }));
   await pending;
   assert.match(node('#map-status').text, /Entre na sua conta/);
-  assert.equal(node('#map-status').children[0].href, '/?next=/mapa.html');
+  assert.equal(node('#map-status').children[0].href, '/index.html?next=/mapa.html');
   assert.equal(node('#map-location').disabled, false);
 });

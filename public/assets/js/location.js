@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     PrevClima.applyTheme(await PrevClima.request("/users/me"));
   } catch (error) {
-    if (error.status === 401) window.location.replace("/?next=/localizacao.html");
+    if (error.status === 401) window.location.replace("/index.html?next=/localizacao.html");
     return;
   }
 

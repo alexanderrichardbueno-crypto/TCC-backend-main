@@ -7,10 +7,9 @@ from sqlalchemy import and_, desc, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.audit import record_audit
-from app.config import get_settings
 from app.dependencies import CurrentUser, DbSession, optional_current_user, require_roles
 from app.inmet_sync import warning_feed_status
-from app.models import AlertRead, AlertReview, Forecast, User, WeatherAlert
+from app.models import AlertRead, AlertReview, Forecast, SevereForecast, User, WeatherAlert
 from app.open_meteo_sync import get_open_meteo_or_fallback
 from app.schemas import (
     AlertCreateRequest,
@@ -24,9 +23,15 @@ from app.schemas import (
     MapForecastOut,
     MapForecastPointOut,
     MessageOut,
+    NearbyAlertsOut,
+    NearbyForecastOut,
+    utc_iso,
 )
 
 router = APIRouter(tags=["meteorologia"])
+
+SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MODERATE": 2, "LOW": 1}
+FORECAST_LEVEL_SEVERITY = {0: "LOW", 1: "LOW", 2: "MODERATE", 3: "HIGH", 4: "CRITICAL"}
 
 
 def now_utc() -> datetime:
@@ -42,7 +47,6 @@ def alert_out(alert: WeatherAlert, read_ids: set[int] | None = None) -> AlertOut
         severity=alert.severity,
         area_name=alert.area_name,
         recommendations=alert.recommendations,
-        is_demo=alert.is_demo,
         origin=alert.origin,
         source_name=alert.source_name,
         source_url=alert.source_url,
@@ -59,16 +63,19 @@ def forecast_out(forecast: Forecast, *, is_stale: bool = False) -> ForecastOut:
     return ForecastOut.model_validate(forecast).model_copy(update={"is_stale": is_stale})
 
 
-def demo_alert_filter():
-    return (
-        True
-        if get_settings().seed_demo_data
-        else and_(WeatherAlert.is_demo.is_(False), WeatherAlert.origin != "DEMO")
+def not_deleted_filter():
+    return WeatherAlert.deleted_at.is_(None)
+
+
+def in_force_filter():
+    """Avisos válidos agora: dentro do prazo, não encerrados e não excluídos no painel."""
+    now = now_utc()
+    return and_(
+        WeatherAlert.issued_at <= now,
+        WeatherAlert.valid_until > now,
+        WeatherAlert.closed_at.is_(None),
+        WeatherAlert.deleted_at.is_(None),
     )
-
-
-def demo_forecast_filter():
-    return True if get_settings().seed_demo_data else Forecast.source_key.not_like("DEMO-%")
 
 
 def active_alerts(db: DbSession) -> list[WeatherAlert]:
@@ -77,10 +84,8 @@ def active_alerts(db: DbSession) -> list[WeatherAlert]:
             select(WeatherAlert)
             .where(
                 and_(
-                    WeatherAlert.issued_at <= now_utc(),
-                    WeatherAlert.valid_until > now_utc(),
+                    in_force_filter(),
                     WeatherAlert.validation_status == "ACTIVE",
-                    demo_alert_filter(),
                 )
             )
             .order_by(desc(WeatherAlert.issued_at))
@@ -168,6 +173,46 @@ def user_read_ids(db: DbSession, user: User | None, alert_ids: list[int]) -> set
     )
 
 
+def map_alert_out(alert: WeatherAlert) -> MapAlertOut:
+    return MapAlertOut(
+        id=alert.id,
+        title=alert.title,
+        message=alert.message,
+        event_type=alert.event_type,
+        severity=alert.severity,
+        area_name=alert.area_name,
+        latitude=alert.latitude,
+        longitude=alert.longitude,
+        radius_km=alert.radius_km,
+        polygon=alert.polygon,
+        origin=alert.origin,
+        source_name=alert.source_name,
+        source_url=alert.source_url,
+        validation_status=alert.validation_status,
+        issued_at=alert.issued_at,
+        valid_until=alert.valid_until,
+    )
+
+
+def severe_forecast_name(level: int) -> str:
+    return "Tempestades não severas" if level == 0 else f"Nível {level}"
+
+
+def severe_forecast_feature(item: SevereForecast) -> dict:
+    return {
+        "type": "Feature",
+        "properties": {
+            "id": item.id,
+            "tipo": "previsao",
+            "nivel": "T" if item.level == 0 else item.level,
+            "nome": severe_forecast_name(item.level),
+            "descricao": item.description,
+            "validade": utc_iso(item.valid_until),
+        },
+        "geometry": item.polygon,
+    }
+
+
 @router.get("/alerts", response_model=list[AlertOut])
 def list_alerts(
     db: DbSession,
@@ -181,11 +226,9 @@ def list_alerts(
             status_code=422, detail="Latitude e longitude devem ser informadas juntas"
         )
     query = select(WeatherAlert)
-    query = query.where(WeatherAlert.validation_status == "ACTIVE", demo_alert_filter())
+    query = query.where(WeatherAlert.validation_status == "ACTIVE", not_deleted_filter())
     if active:
-        query = query.where(
-            WeatherAlert.issued_at <= now_utc(), WeatherAlert.valid_until > now_utc()
-        )
+        query = query.where(in_force_filter())
     alerts = list(db.scalars(query.order_by(desc(WeatherAlert.issued_at))))
     if user and latitude is None and user.latitude is not None and user.longitude is not None:
         latitude, longitude = float(user.latitude), float(user.longitude)
@@ -194,13 +237,85 @@ def list_alerts(
     return [alert_out(alert, read_ids) for alert in alerts]
 
 
+@router.get("/alerts/nearby", response_model=NearbyAlertsOut)
+def nearby_alerts(
+    db: DbSession,
+    user: Annotated[User | None, Depends(optional_current_user)],
+    latitude: float | None = Query(default=None, ge=-90, le=90),
+    longitude: float | None = Query(default=None, ge=-180, le=180),
+):
+    """Alertas e previsões de tempo severo que cobrem a região do usuário.
+
+    As coordenadas do aparelho só são usadas nesta consulta; nada é salvo no perfil.
+    """
+    if (latitude is None) != (longitude is None):
+        raise HTTPException(
+            status_code=422, detail="Latitude e longitude devem ser informadas juntas"
+        )
+    city = user.city if user and user.city else "Mongagua"
+    state = user.state if user and user.state else "SP"
+    location = f"{city}, {state}"
+    if latitude is not None:
+        location = "Sua localização atual"
+    elif user and user.latitude is not None and user.longitude is not None:
+        latitude, longitude = float(user.latitude), float(user.longitude)
+    else:
+        forecast, _ = get_open_meteo_or_fallback(
+            db, city=city, state=state, latitude=None, longitude=None, require_coordinates=True
+        )
+        if forecast and forecast.latitude is not None and forecast.longitude is not None:
+            latitude, longitude = float(forecast.latitude), float(forecast.longitude)
+            location = f"{forecast.city}, {forecast.state}"
+    if latitude is None or longitude is None:
+        return NearbyAlertsOut(location=None, alerts=[], forecasts=[])
+
+    # Aqui só entra o que comprovadamente cobre a região; aviso sem área não dá para confirmar.
+    delimited = [
+        alert
+        for alert in active_alerts(db)
+        if alert.polygon or (alert.latitude is not None and alert.radius_km is not None)
+    ]
+    alerts = alerts_for_location(delimited, latitude, longitude)
+    alerts.sort(key=lambda alert: (alert.origin != "MANUAL", -SEVERITY_RANK.get(alert.severity, 0)))
+    read_ids = user_read_ids(db, user, [alert.id for alert in alerts])
+
+    severe = db.scalars(
+        select(SevereForecast)
+        .where(SevereForecast.issued_at <= now_utc(), SevereForecast.valid_until > now_utc())
+        .order_by(desc(SevereForecast.level), SevereForecast.id)
+    )
+    forecasts = [
+        NearbyForecastOut(
+            id=item.id,
+            level=item.level,
+            level_name=severe_forecast_name(item.level),
+            severity=FORECAST_LEVEL_SEVERITY.get(item.level, "LOW"),
+            description=item.description,
+            issued_at=item.issued_at,
+            valid_until=item.valid_until,
+        )
+        for item in severe
+        if point_in_polygon(longitude, latitude, item.polygon)
+    ]
+    return NearbyAlertsOut(
+        location=location,
+        alerts=[alert_out(alert, read_ids) for alert in alerts],
+        forecasts=forecasts,
+    )
+
+
 @router.get("/alerts/review-queue", response_model=list[AlertOut])
 def alert_review_queue(
     db: DbSession,
     _: Annotated[User, Depends(require_roles("METEOROLOGIST"))],
     limit: int = Query(default=100, ge=1, le=200),
 ):
-    alerts = db.scalars(select(WeatherAlert).order_by(desc(WeatherAlert.issued_at)).limit(limit))
+    alerts = db.scalars(
+        select(WeatherAlert)
+        .where(not_deleted_filter())
+        .order_by(desc(WeatherAlert.issued_at))
+        .limit(limit)
+    )
     return [alert_out(alert) for alert in alerts]
 
 
@@ -242,7 +357,7 @@ def review_alert(
     user: Annotated[User, Depends(require_roles("METEOROLOGIST"))],
 ):
     alert = db.get(WeatherAlert, alert_id)
-    if not alert:
+    if not alert or alert.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Aviso não encontrado")
     previous_status = alert.validation_status
     if previous_status == payload.validation_status:
@@ -319,6 +434,7 @@ def mark_alert_read(alert_id: int, user: CurrentUser, db: DbSession):
         select(WeatherAlert).where(
             WeatherAlert.id == alert_id,
             WeatherAlert.validation_status == "ACTIVE",
+            not_deleted_filter(),
         )
     )
     if not alert:
@@ -396,7 +512,6 @@ def home(
                 Forecast.issued_at <= now_utc(),
                 Forecast.valid_until > now_utc(),
                 Forecast.polygon.is_not(None),
-                demo_forecast_filter(),
             )
             .order_by(desc(Forecast.issued_at))
         )
@@ -417,8 +532,7 @@ def home(
         latitude, longitude = float(forecast.latitude), float(forecast.longitude)
     alerts = alerts_for_location(active_alerts(db), latitude, longitude)
     # Highlight the most severe current warning, rather than the newest mild one.
-    ranks = {"CRITICAL": 4, "HIGH": 3, "MODERATE": 2, "LOW": 1}
-    alerts.sort(key=lambda alert: ranks.get(alert.severity, 0), reverse=True)
+    alerts.sort(key=lambda alert: SEVERITY_RANK.get(alert.severity, 0), reverse=True)
     read_ids = user_read_ids(db, user, [alert.id for alert in alerts])
     rendered = [alert_out(alert, read_ids) for alert in alerts]
     return HomeOut(
@@ -490,34 +604,25 @@ def map_data(
                 is_stale=is_stale,
             )
         )
-    alerts = [
-        MapAlertOut(
-            id=alert.id,
-            title=alert.title,
-            event_type=alert.event_type,
-            severity=alert.severity,
-            area_name=alert.area_name,
-            latitude=alert.latitude,
-            longitude=alert.longitude,
-            radius_km=alert.radius_km,
-            polygon=alert.polygon,
-            is_demo=alert.is_demo,
-            origin=alert.origin,
-            source_name=alert.source_name,
-            source_url=alert.source_url,
-            validation_status=alert.validation_status,
-            issued_at=alert.issued_at,
-            valid_until=alert.valid_until,
+    alerts = [map_alert_out(alert) for alert in active_alerts(db)]
+    upcoming = db.scalars(
+        select(WeatherAlert)
+        .where(
+            WeatherAlert.origin == "INMET",
+            WeatherAlert.issued_at > now_utc(),
+            WeatherAlert.valid_until > now_utc(),
+            WeatherAlert.validation_status == "ACTIVE",
+            WeatherAlert.closed_at.is_(None),
+            not_deleted_filter(),
         )
-        for alert in active_alerts(db)
-    ]
+        .order_by(WeatherAlert.issued_at)
+    )
     forecasts = db.scalars(
         select(Forecast)
         .where(
             Forecast.issued_at <= now_utc(),
             Forecast.valid_until > now_utc(),
             Forecast.polygon.is_not(None),
-            demo_forecast_filter(),
         )
         .order_by(desc(Forecast.issued_at))
     )
@@ -534,10 +639,20 @@ def map_data(
         for forecast in forecasts
         if forecast.polygon
     ]
+    severe = list(
+        db.scalars(
+            select(SevereForecast)
+            .where(SevereForecast.issued_at <= now_utc(), SevereForecast.valid_until > now_utc())
+            .order_by(SevereForecast.level, SevereForecast.id)
+        )
+    )
     return MapDataOut(
         warning_feed=warning_feed_status(db),
         alerts=alerts,
+        upcoming_alerts=[map_alert_out(alert) for alert in upcoming],
         forecast_areas=forecast_areas,
         forecast_points=forecast_points,
+        published_areas=[severe_forecast_feature(item) for item in severe],
+        published_areas_at=max((item.created_at for item in severe), default=None),
         generated_at=now_utc(),
     )

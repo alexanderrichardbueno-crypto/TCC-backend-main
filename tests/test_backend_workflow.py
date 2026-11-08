@@ -23,6 +23,7 @@ def add_user(db, *, email: str, role_code: str, public_code: str) -> User:
         email=email,
         password_hash=hash_password("Senha123!"),
         role_id=role.id,
+        email_verified_at=datetime.now(UTC),
     )
     db.add(user)
     db.commit()
@@ -85,143 +86,6 @@ def test_meteorologist_review_is_audited_and_hides_flagged_alert(client: TestCli
         db.scalar(select(func.count(AuditEvent.id)).where(AuditEvent.action == "ALERT_REVIEWED"))
         == 1
     )
-
-
-def test_admin_soft_delete_revokes_tokens_and_never_allows_self_delete(client: TestClient, db):
-    admin = add_user(
-        db,
-        email="admin@exemplo.com",
-        role_code="ADMIN",
-        public_code="TEST-ADMIN",
-    )
-    victim = add_user(
-        db,
-        email="vitima@exemplo.com",
-        role_code="USER",
-        public_code="TEST-VICTIM",
-    )
-    assert (
-        client.post(
-            "/api/v1/auth/login",
-            json={"email": "vitima@exemplo.com", "password": "Senha123!"},
-        ).status_code
-        == 200
-    )
-    old_access_token = client.cookies.get("prevclima_access")
-    client.cookies.clear()
-    assert (
-        client.post(
-            "/api/v1/auth/login",
-            json={"email": "admin@exemplo.com", "password": "Senha123!"},
-        ).status_code
-        == 200
-    )
-    assert (
-        client.delete(f"/api/v1/admin/users/{admin.id}", headers=csrf_headers(client)).status_code
-        == 409
-    )
-    assert (
-        client.delete(f"/api/v1/admin/users/{victim.id}", headers=csrf_headers(client)).status_code
-        == 200
-    )
-    db.refresh(victim)
-    assert victim.is_active is False
-    assert victim.token_version == 1
-    assert (
-        db.scalar(select(func.count(AuditEvent.id)).where(AuditEvent.action == "USER_DEACTIVATED"))
-        == 1
-    )
-    client.cookies.clear()
-    client.cookies.set("prevclima_access", old_access_token)
-    assert client.get("/api/v1/users/me").status_code == 401
-
-
-def test_admin_can_create_only_meteorologists(client: TestClient, db):
-    add_user(
-        db,
-        email="admin-criacao@exemplo.com",
-        role_code="ADMIN",
-        public_code="TEST-ADMIN-CREATE",
-    )
-    assert (
-        client.post(
-            "/api/v1/auth/login-professional",
-            json={"email": "admin-criacao@exemplo.com", "password": "Senha123!"},
-        ).status_code
-        == 200
-    )
-    base = {
-        "name": "Nova Meteorologista",
-        "email": "nova-meteorologista@exemplo.com",
-        "password": "Senha123!",
-        "city": None,
-        "state": None,
-    }
-    denied = client.post(
-        "/api/v1/admin/users",
-        headers=csrf_headers(client),
-        json={**base, "role": "USER"},
-    )
-    assert denied.status_code == 422
-    created = client.post(
-        "/api/v1/admin/users",
-        headers=csrf_headers(client),
-        json={**base, "role": "METEOROLOGIST"},
-    )
-    assert created.status_code == 201
-    assert created.json()["role"] == "METEOROLOGIST"
-    now = datetime.now(UTC)
-    direct_alert = client.post(
-        "/api/v1/alerts",
-        headers=csrf_headers(client),
-        json={
-            "title": "Aviso administrativo indevido",
-            "message": "A conta administrativa nao pode emitir este aviso.",
-            "event_type": "HEAVY_RAIN",
-            "severity": "HIGH",
-            "area_name": "Santos",
-            "latitude": -23.96,
-            "longitude": -46.33,
-            "radius_km": 20,
-            "recommendations": ["Procure abrigo"],
-            "issued_at": now.isoformat(),
-            "valid_until": (now + timedelta(hours=2)).isoformat(),
-        },
-    )
-    assert direct_alert.status_code == 403
-    assert client.get("/api/v1/reports/review-queue").status_code == 403
-    assert (
-        client.post(
-            "/api/v1/integrations/inmet/sync-warnings",
-            headers=csrf_headers(client),
-        ).status_code
-        == 403
-    )
-
-
-def test_mobile_pages_exist_and_mobile_login_blocks_admin(client: TestClient, db):
-    admin = add_user(
-        db,
-        email="admin-mobile@exemplo.com",
-        role_code="ADMIN",
-        public_code="TEST-ADMIN-MOBILE",
-    )
-    assert admin.role.code == "ADMIN"
-    assert client.get("/mobile/").status_code == 200
-    assert client.get("/mobile/inicio.html").status_code == 200
-    denied = client.post(
-        "/api/v1/auth/login-mobile",
-        json={"email": "admin-mobile@exemplo.com", "password": "Senha123!"},
-    )
-    assert denied.status_code == 403
-    assert (
-        client.post(
-            "/api/v1/auth/login",
-            json={"email": "admin-mobile@exemplo.com", "password": "Senha123!"},
-        ).status_code
-        == 200
-    )
-    assert client.get("/api/v1/auth/mobile-session").status_code == 403
 
 
 def inmet_xml() -> bytes:
@@ -468,3 +332,52 @@ def test_open_meteo_rejects_untrusted_url_and_invalid_payload():
     )
     with pytest.raises(OpenMeteoError, match="previsão incompleta"):
         malformed.fetch_forecast(-23.55, -46.63)
+
+
+def test_native_app_uses_bearer_token_without_cookies(registered_client: TestClient):
+    login = registered_client.post(
+        "/api/v1/auth/login-mobile",
+        json={"email": "maria@exemplo.com", "password": "Senha123!"},
+    )
+    assert login.status_code == 200
+    token = login.json()["access_token"]
+    assert token
+    registered_client.cookies.clear()
+    headers = {"Authorization": f"Bearer {token}"}
+    assert registered_client.get("/api/v1/auth/mobile-session", headers=headers).status_code == 200
+    updated = registered_client.patch(
+        "/api/v1/users/me", json={"dark_theme": False}, headers=headers
+    )
+    assert updated.status_code == 200
+    assert updated.json()["dark_theme"] is False
+    # O login do site continua sem expor o token no corpo da resposta.
+    web = registered_client.post(
+        "/api/v1/auth/login",
+        json={"email": "maria@exemplo.com", "password": "Senha123!"},
+    )
+    assert web.json()["access_token"] is None
+
+
+def test_mobile_pages_exist_and_mobile_login_blocks_admin(client: TestClient, db):
+    admin = add_user(
+        db,
+        email="admin-mobile@exemplo.com",
+        role_code="METEOROLOGIST",
+        public_code="TEST-METEO-MOBILE",
+    )
+    assert admin.role.code == "METEOROLOGIST"
+    assert client.get("/mobile/").status_code == 200
+    assert client.get("/mobile/inicio.html").status_code == 200
+    denied = client.post(
+        "/api/v1/auth/login-mobile",
+        json={"email": "admin-mobile@exemplo.com", "password": "Senha123!"},
+    )
+    assert denied.status_code == 403
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"email": "admin-mobile@exemplo.com", "password": "Senha123!"},
+        ).status_code
+        == 200
+    )
+    assert client.get("/api/v1/auth/mobile-session").status_code == 403

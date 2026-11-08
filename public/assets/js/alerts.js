@@ -6,12 +6,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const user = await PrevClima.request("/users/me");
     PrevClima.applyTheme(user);
-    location.textContent = user.city && user.state
-      ? `Cidade do perfil: ${user.city}, ${user.state}${user.latitude == null || user.longitude == null ? " · Avisos de todas as áreas" : ""}`
-      : "Alertas ativos para todas as áreas";
   } catch (error) {
     signedIn = false;
-    location.textContent = "Alertas ativos para todas as áreas";
   }
 
   function paragraph(text, className) {
@@ -33,10 +29,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const icon = document.createElement("strong");
     icon.textContent = "!";
     const info = document.createElement("div");
-    info.append(paragraph(PrevClima.severityName(alert.severity).toUpperCase(), "alert-level"));
+    const origin = alert.origin === "MANUAL" ? "PREVCLIMA" : "INMET";
+    info.append(paragraph(`${PrevClima.severityName(alert.severity).toUpperCase()} · ${origin}`, "alert-level"));
     const title = document.createElement("h2");
     title.className = "alert-title";
-    title.textContent = `${alert.is_demo ? "DEMO - " : ""}${alert.title}`;
+    title.textContent = alert.title;
     info.append(title, paragraph(alert.area_name, "muted"));
     const issued = new Date(alert.issued_at);
     const timeText = `Emitido ${PrevClima.relativeTime(issued)} · válido até ${new Date(alert.valid_until).toLocaleString("pt-BR")}`;
@@ -89,13 +86,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     return card;
   }
 
+  // Sem permissão ou sem sinal, a API usa a cidade do perfil.
+  function deviceCoordinates() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) { resolve(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve({ latitude: position.coords.latitude.toFixed(2), longitude: position.coords.longitude.toFixed(2) }),
+        () => resolve(null),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 900000 },
+      );
+    });
+  }
+
+  function renderForecast(forecast) {
+    const card = document.createElement("article");
+    card.className = "alert-card";
+    card.dataset.severity = forecast.severity;
+    const body = document.createElement("div");
+    body.className = "alert-summary";
+    body.style.cursor = "default";
+    const icon = document.createElement("strong");
+    icon.textContent = "!";
+    const info = document.createElement("div");
+    const title = document.createElement("h2");
+    title.className = "alert-title";
+    title.textContent = "Previsão de tempo severo";
+    info.append(
+      paragraph(`${forecast.level_name.toUpperCase()} · PREVCLIMA`, "alert-level"),
+      title,
+      paragraph(forecast.description, "muted"),
+      paragraph(`Emitida ${PrevClima.relativeTime(new Date(forecast.issued_at))} · válida até ${new Date(forecast.valid_until).toLocaleString("pt-BR")}`, "alert-time"),
+    );
+    body.append(icon, info);
+    card.append(body);
+    return card;
+  }
+
   try {
-    const alerts = await PrevClima.request("/alerts?active=true");
-    count.textContent = `${alerts.length} ativo${alerts.length === 1 ? "" : "s"}`;
+    const coords = await deviceCoordinates();
+    const data = await PrevClima.request(`/alerts/nearby${coords ? `?${new URLSearchParams(coords)}` : ""}`);
+    const total = data.alerts.length + data.forecasts.length;
+    count.textContent = `${total} ativo${total === 1 ? "" : "s"}`;
+    location.textContent = data.location
+      ? `Sua região: ${data.location}${coords || signedIn ? "" : " · Permita a localização ou entre e informe sua cidade no perfil"}`
+      : "Não foi possível identificar sua região. Confira a cidade no seu perfil.";
     list.replaceChildren();
-    if (!alerts.length) list.append(paragraph("Nenhum aviso disponível. Confira também a fonte oficial do INMET; a ausência de avisos não confirma ausência de risco.", "empty"));
-    else alerts.forEach((alert) => list.append(render(alert)));
+    if (!total) list.append(paragraph("Nenhum alerta ou previsão para a sua região. Confira também a fonte oficial do INMET; a ausência de avisos não confirma ausência de risco.", "empty"));
+    data.alerts.forEach((alert) => list.append(render(alert)));
+    data.forecasts.forEach((forecast) => list.append(renderForecast(forecast)));
   } catch (error) {
+    location.textContent = "";
     count.textContent = "Indisponível";
     list.replaceChildren(paragraph(error.message, "error"));
   }

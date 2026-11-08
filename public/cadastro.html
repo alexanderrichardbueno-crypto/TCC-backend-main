@@ -4,36 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PrevClima - Criar conta</title>
+  <link rel="icon" href="/assets/img/logo-reserva.svg" type="image/svg+xml">
+  <script src="/assets/js/theme.js"></script>
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
   <link rel="stylesheet" href="/assets/css/login-intro.css">
   <script src="/assets/js/login-intro.js" defer></script>
   <script src="/assets/js/api.js" defer></script>
   <script src="/assets/js/register.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/site-theme.css">
 </head>
 <body class="auth-page login-entry">
   <main class="auth-shell">
     <aside id="login-intro" class="auth-story" aria-label="Sobre o PrevClima" hidden>
       <span class="eyebrow">PREVCLIMA / INTELIGÊNCIA CLIMÁTICA</span>
-      <div class="auth-story-art" aria-hidden="true"><span class="story-orbit story-orbit-one"></span><span class="story-orbit story-orbit-two"></span><span class="story-core">&#9889;</span><span class="story-signal story-signal-one"></span><span class="story-signal story-signal-two"></span></div>
+      <div class="auth-story-art" aria-hidden="true"><span class="story-orbit story-orbit-one"></span><span class="story-orbit story-orbit-two"></span><span class="story-core"><img data-logo src="/marca/logo" alt=""></span><span class="story-signal story-signal-one"></span><span class="story-signal story-signal-two"></span></div>
       <h2>O tempo muda.<br><em>Você se antecipa.</em></h2>
       <p>Crie sua conta para acompanhar o tempo na sua cidade e receber avisos sobre sua região.</p>
-      <div class="auth-story-tags"><span>Previsão local</span><span>Avisos do INMET</span><span>Relatos da comunidade</span></div>
+      <div class="auth-story-tags"><span>Previsão local</span><span>Avisos do INMET</span><span>Alertas de tempo severo</span></div>
       <button id="skip-intro" class="intro-skip" type="button">Ir para o cadastro →</button>
     </aside>
     <div class="auth-form-column">
     <header class="auth-brand">
-      <div class="login-wordmark"><img src="/assets/img/prevclima-mark.svg" width="42" height="42" alt=""><h1>Prev<span>Clima</span></h1></div>
+      <div class="login-wordmark"><img data-logo src="/marca/logo" width="42" height="42" alt=""><h1>Prev<span>Clima</span></h1></div>
       <p>Crie sua conta para receber alertas da sua região</p>
     </header>
     <section class="auth-card">
       <nav class="tabs" aria-label="Autenticação">
-        <a href="/">Entrar</a>
+        <a href="/index.html">Entrar</a>
         <a class="active" href="/cadastro.html">Criar conta</a>
       </nav>
       <form id="register-form">
         <div class="field">
-          <label for="name">Nome completo</label>
+          <label for="name">Nome de usuário</label>
           <input id="name" name="name" autocomplete="name" minlength="2" maxlength="120" required>
         </div>
         <div class="field">
@@ -42,8 +48,8 @@
         </div>
         <div class="field">
           <label for="password">Senha</label>
-          <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
-          <span id="password-help" class="helper">Mínimo de 8 caracteres, com maiúscula, minúscula, número e símbolo.</span>
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required>
+          <span id="password-help" class="helper">Mínimo de 6 caracteres, com pelo menos uma letra maiúscula e um caractere especial.</span>
         </div>
         <div class="form-row">
           <div class="field">

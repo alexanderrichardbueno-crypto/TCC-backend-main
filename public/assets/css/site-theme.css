@@ -1,0 +1,238 @@
+/* Identidade visual da central meteorológica (site.tpl.html) aplicada às páginas públicas. */
+:root {
+  color-scheme: dark;
+  --bg: #040c24; --bg-strong: #0a1734; --surface: #0a1734; --surface-2: #0e1f45; --surface-3: #132a58;
+  --panel: #0a1734; --panel-soft: #0e1f45; --surface-inset: #0e1f45; --surface-frost: #0a1734;
+  --body-background: #040c24;
+  --border: #1b3163; --line: #1b3163; --text: #e9efff; --muted: #93a6d1; --faint: #6479a8;
+  --primary: #3a74ff; --primary-t: rgba(58,116,255,.18); --on-primary: #fff;
+  --blue: #3a74ff; --blue-light: #7ea5ff; --cyan: #7ea5ff;
+  --gold: #f5b301; --gold-ink: #f5b301; --gold-t: rgba(245,179,1,.14); --yellow: #f5b301;
+  --crit: #ff4b5f; --crit-t: rgba(255,75,95,.15); --red: #ff4b5f;
+  --high: #ff8a1f; --high-t: rgba(255,138,31,.15); --orange: #ff8a1f;
+  --mod: #f5c400; --mod-t: rgba(245,196,0,.14);
+  --ok: #2fd06a; --ok-t: rgba(47,208,106,.13); --green: #2fd06a;
+  --sea: #071230;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  --focus: #7ea5ff;
+  --radius: 10px;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+:root.light {
+  color-scheme: light;
+  --bg: #eef2f9; --bg-strong: #fff; --surface: #fff; --surface-2: #f3f6fc; --surface-3: #e6edf9;
+  --panel: #fff; --panel-soft: #f3f6fc; --surface-inset: #f3f6fc; --surface-frost: #fff;
+  --body-background: #eef2f9;
+  --border: #d6dfef; --line: #d6dfef; --text: #0b1a3a; --muted: #52648a; --faint: #8494b5;
+  --primary: #1447d4; --primary-t: rgba(20,71,212,.10); --on-primary: #fff;
+  --blue: #1447d4; --blue-light: #1447d4; --cyan: #1447d4;
+  --gold: #f5b301; --gold-ink: #8a5d00; --gold-t: rgba(245,179,1,.16); --yellow: #8a5d00;
+  --crit: #d11a33; --crit-t: rgba(209,26,51,.10); --red: #d11a33;
+  --high: #c2500a; --high-t: rgba(232,99,10,.12); --orange: #c2500a;
+  --mod: #8f6b00; --mod-t: rgba(245,196,0,.20);
+  --ok: #13803f; --ok-t: rgba(19,128,63,.11); --green: #13803f;
+  --sea: #cfe0f7;
+  --shadow: 0 1px 2px rgba(11,26,58,.06), 0 10px 30px rgba(11,26,58,.07);
+  --focus: #1447d4;
+}
+
+html body { background: var(--bg); color: var(--text); font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+html body::before { display: none; }
+h1, h2, .page-heading h1 { font-family: "Sora", sans-serif; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+:root .muted, :root .eyebrow, :root .section-label { color: var(--muted); }
+:root .error { color: var(--crit); }
+:root .success { color: var(--ok); }
+
+/* Controle de tema e logo */
+.theme-toggle { align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; display: inline-flex; flex: none; height: 40px; justify-content: center; margin-left: 10px; width: 40px; }
+.theme-toggle:hover { background: var(--surface-2); }
+.theme-toggle.floating { margin: 0; position: fixed; right: 14px; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 900; }
+.brand-logo { border-radius: 50%; display: block; flex: none; object-fit: cover; }
+:root .brand { align-items: center; color: var(--text); display: inline-flex; font-family: "Sora", sans-serif; font-weight: 800; gap: 9px; letter-spacing: -.02em; }
+:root .brand > span:last-child { color: var(--gold); margin-left: -9px; }
+:root.light .brand > span:last-child { color: var(--gold-ink); }
+.login-wordmark img { border-radius: 50%; object-fit: cover; }
+:root .auth-brand h1, :root .login-wordmark h1 { color: var(--text); font-family: "Sora", sans-serif; font-weight: 800; letter-spacing: -.02em; text-transform: none; }
+:root .auth-brand h1 span { color: var(--gold); }
+:root.light .auth-brand h1 span { color: var(--gold-ink); }
+:root .auth-brand p { color: var(--muted); }
+
+/* Entrada */
+:root .auth-page, :root.light .auth-page { background: var(--bg); }
+:root .auth-story, :root.light .auth-story { background: linear-gradient(180deg, #020a24, #031a55 58%, #06308f); border-radius: 0; color: #fff; }
+:root .auth-story p { color: #c6d4f7; }
+:root .auth-story .eyebrow { color: #c6d4f7; }
+:root .auth-story h2 { color: #fff; font-family: "Sora", sans-serif; }
+:root .auth-story h2 em, :root.light .auth-story h2 em { color: #f5b301; }
+:root .auth-story-tags span, :root.light .auth-story-tags span { background: rgba(255,255,255,.08); border-color: rgba(198,212,247,.28); color: #e9efff; }
+:root .auth-story .story-core { background: transparent; border: 0; box-shadow: none; overflow: hidden; padding: 0; }
+.story-core img { border-radius: 50%; display: block; height: 100%; object-fit: cover; width: 100%; }
+:root .auth-card, :root.light .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); }
+:root .tabs { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
+:root .tabs a { border-radius: 6px; color: var(--muted); }
+:root .tabs a.active { background: var(--primary); box-shadow: none; color: var(--on-primary); }
+:root .guest-link { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+:root .field label, :root.light .field label, :root .auth-card .field label { color: var(--text); font-size: 13.5px; font-weight: 700; letter-spacing: 0; text-transform: none; }
+:root .field input, :root .field select, :root .field textarea, :root .auth-card .field input, :root .auth-card .field select { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+:root .field input:focus, :root .field select:focus, :root .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-t); }
+:root .helper { color: var(--muted); }
+
+/* Botões */
+:root .button { background: var(--primary); border: 1px solid var(--primary); border-radius: 8px; box-shadow: none; color: var(--on-primary); font-weight: 700; }
+:root .button:hover { background: var(--primary); filter: brightness(1.08); }
+:root .button.secondary, :root.light .button.secondary { background: var(--surface); border-color: var(--border); color: var(--text); }
+:root .button.secondary:hover { background: var(--surface-2); filter: none; }
+
+/* Navegação */
+:root .topbar, :root.light .topbar { background: var(--surface); border-color: var(--border); box-shadow: none; }
+:root .back-link { color: var(--text); }
+:root .desktop-nav a { border-color: transparent; color: var(--muted); }
+:root .desktop-nav a:hover { background: var(--surface-2); color: var(--text); }
+:root .desktop-nav a[aria-current="page"] { background: var(--primary); border-color: var(--primary); box-shadow: none; color: var(--on-primary); }
+:root .bottom-nav, :root.light .bottom-nav { background: var(--surface); border-color: var(--border); box-shadow: none; }
+:root .bottom-nav a { color: var(--muted); }
+:root .bottom-nav a.active, :root .bottom-nav a:hover:not(.disabled), :root.light .bottom-nav a.active, :root.light .bottom-nav a:hover:not(.disabled) { background: transparent; color: var(--gold-ink); }
+:root .bottom-nav a.nav-center { background: var(--primary); border-color: var(--surface); box-shadow: none; color: #fff; }
+:root .role-pill { background: var(--primary-t); color: var(--primary); }
+:root .toast { background: var(--surface-3); border: 1px solid var(--border); color: var(--text); }
+
+/* Cartões */
+:root .weather-home-page .weather-hero, :root.light .weather-hero, :root .weather-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); color: var(--text); }
+:root .weather-hero::before, :root .weather-hero::after { display: none; }
+:root .weather-home-page .weather-hero .muted, :root .weather-home-page .updated-at, :root.light .weather-hero .muted, :root.light .weather-hero .updated-at, :root.light .weather-hero .temperature small, :root .weather-hero .temperature small { color: var(--muted); }
+:root .weather-home-page .weather-hero .data-source { color: var(--cyan); }
+:root .forecast-status { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+:root .weather-home-page .weather-icon { color: var(--gold); }
+:root .weather-home-page .hero-kicker { color: var(--muted); }
+:root .weather-home-page .metric, :root .metric, :root .content-card, :root .settings-panel, :root .profile-page .settings-panel, :root .dashboard-panel, :root .weather-card, :root .news-card, :root .confirmed-location { background: var(--surface); border-color: var(--border); box-shadow: var(--shadow); color: var(--text); }
+:root .weather-home-page .weather-grid { background: transparent; }
+:root .weather-home-page .warning-panel, :root .warning-panel, :root.light .warning-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); color: var(--text); }
+:root .warning-panel .eyebrow, :root.light .warning-panel .eyebrow, :root .weather-home-page .warning-panel .eyebrow { color: var(--muted); }
+:root .weather-home-page .warning-panel .risk-icon { background: var(--gold-t); border-color: transparent; color: var(--gold-ink); }
+:root .weather-home-page .warning-panel[data-severity="CRITICAL"] { border-top: 3px solid var(--crit); }
+:root .weather-home-page .warning-panel[data-severity="HIGH"] { border-top: 3px solid var(--high); }
+:root .weather-home-page .warning-panel[data-severity="MODERATE"] { border-top: 3px solid var(--mod); }
+:root .home-shortcuts a { border-color: var(--border); color: var(--text); }
+:root .profile-page .profile-summary, :root .profile-summary { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); color: var(--text); }
+:root .avatar, :root .profile-card-row .avatar { background: var(--primary); border-color: transparent; box-shadow: none; color: #fff; }
+:root .location-art { background: var(--primary); }
+
+/* Alertas */
+:root .alert-card, :root.light .alert-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); color: var(--text); }
+:root .alert-card[data-severity="CRITICAL"], :root.light .alert-card[data-severity="CRITICAL"] { background: linear-gradient(90deg, var(--crit-t), var(--surface) 72%); border-color: var(--border); border-left-color: var(--crit); }
+:root .alert-card[data-severity="HIGH"], :root.light .alert-card[data-severity="HIGH"] { background: linear-gradient(90deg, var(--high-t), var(--surface) 72%); border-color: var(--border); border-left-color: var(--high); }
+:root .alert-card[data-severity="MODERATE"], :root.light .alert-card[data-severity="MODERATE"] { background: linear-gradient(90deg, var(--mod-t), var(--surface) 72%); border-color: var(--border); border-left-color: var(--mod); }
+:root .alert-level, :root.light .alert-level { color: var(--mod); }
+:root .alert-card[data-severity="CRITICAL"] .alert-level, :root.light .alert-card[data-severity="CRITICAL"] .alert-level { color: var(--crit); }
+:root .alert-card[data-severity="HIGH"] .alert-level, :root.light .alert-card[data-severity="HIGH"] .alert-level { color: var(--high); }
+:root .alert-time { color: var(--muted); }
+:root .recommendations { background: var(--surface-2); color: var(--text); }
+:root .active-count { background: var(--crit-t); border-color: transparent; color: var(--crit); }
+
+/* Mapa */
+:root .weather-map-page { background: var(--bg); }
+:root .map-canvas, :root .weather-map-page #weather-map { background: var(--sea); }
+:root .map-intro h1 span { color: var(--gold-ink); }
+:root .map-forecast { background: var(--surface); border-color: var(--border); box-shadow: var(--shadow); color: var(--text); }
+:root .map-forecast p { color: var(--muted); }
+:root .map-forecast a { color: var(--cyan); }
+:root .map-forecast .data-tag { background: var(--surface-2); border-color: var(--border); }
+:root .map-layers input { accent-color: var(--primary); }
+.forecast-dot { background: #ff7a00; }
+.warning-dot { background: #F96602; }
+:root .weather-map-page .leaflet-popup-content-wrapper, :root .weather-map-page .leaflet-popup-tip { background: var(--surface); color: var(--text); }
+:root .weather-map-page .leaflet-bar a { background: var(--surface); border-color: var(--border); color: var(--text); }
+:root .weather-map-page .leaflet-bar a:hover { background: var(--surface-2); }
+
+/* Aplicativo móvel */
+:root .mobile-brand h1 { font-family: "Sora", sans-serif; font-weight: 800; letter-spacing: -.02em; }
+:root .mobile-brand h1 span, :root .mobile-greeting h1 > span:last-child { color: var(--gold-ink); }
+:root .mobile-brand-mark img { border-radius: 50%; }
+:root .mobile-primary { background: var(--primary); border-color: var(--primary); box-shadow: none; color: var(--on-primary); }
+:root .mobile-tabs button.active { background: var(--primary); box-shadow: none; color: var(--on-primary); }
+:root .mobile-card input { background: var(--surface); }
+:root .mobile-topbar .theme-toggle { margin-left: auto; margin-right: 8px; }
+:root .mobile-card, :root .mobile-weather-card, :root .mobile-risk-card { box-shadow: var(--shadow); }
+
+
+/* Visual mais rico, como o aplicativo: faixas em azul, anéis de radar e destaques coloridos. */
+:root { --hero: linear-gradient(150deg, #06308f 0%, #031a55 55%, #020a24 100%); --rings: repeating-radial-gradient(circle at 88% 16%, rgba(150,185,255,0) 0 58px, rgba(150,185,255,.15) 59px 60px); }
+html body { background: radial-gradient(900px 420px at 88% -8%, var(--primary-t), transparent 70%), var(--bg); background-repeat: no-repeat; background-color: var(--bg); }
+:root .panel, :root .data-card, :root .empty { border-radius: 10px; }
+:root .btn, :root input.field, :root select.field, :root textarea.field { border-radius: 8px; }
+:root .map-forecast, :root .map-warning-list li, :root .map-canvas-toolbar > span, :root .map-canvas-toolbar button, :root .map-key, :root .map-visual-status, :root .map-section-title > span, :root .confirmed-location, :root .recommendations, :root .profile-page .settings-panel, :root .profile-page .profile-summary, :root .mobile-card, :root .mobile-weather-card, :root .mobile-risk-card, :root .mobile-metrics, :root .mobile-tabs, :root .mobile-card input, :root .mobile-primary, :root .mobile-access-note, :root .mobile-section, :root .mobile-alert-list > * { border-radius: 8px; }
+:root .bottom-nav a.nav-center { border-radius: 10px; }
+:root .avatar, :root .profile-card-row .avatar { border-radius: 10px; }
+
+/* Faixas de destaque */
+:root .weather-home-page .weather-hero, :root .weather-hero, :root.light .weather-hero, :root .page-heading, :root .weather-home-page .home-heading, :root .profile-page .profile-summary, :root .map-forecast, :root .mobile-weather-card { background: var(--hero); border: 1px solid #2c4a92; color: #fff; isolation: isolate; overflow: hidden; position: relative; }
+:root .weather-hero::after, :root .page-heading::after, :root .weather-home-page .home-heading::after, :root .profile-page .profile-summary::after, :root .map-forecast::after, :root .mobile-weather-card::after { background: var(--rings); border: 0; border-radius: 0; content: ""; display: block; height: auto; inset: 0; pointer-events: none; position: absolute; right: 0; top: 0; width: auto; z-index: -1; }
+:root .page-heading, :root .weather-home-page .home-heading { border-radius: 10px; box-shadow: var(--shadow); padding: 28px; }
+:root .page-heading h1, :root .home-heading h1, :root .weather-hero h2, :root .map-forecast h2, :root .profile-summary h2, :root .mobile-weather-card strong { color: #fff; }
+:root .page-heading .muted, :root .page-heading .eyebrow, :root .home-heading .eyebrow, :root .weather-hero .eyebrow, :root .weather-home-page .weather-hero .muted, :root .weather-home-page .updated-at, :root.light .weather-hero .muted, :root.light .weather-hero .updated-at, :root.light .weather-hero .temperature small, :root .weather-hero .temperature small, :root .weather-hero .hero-kicker, :root .map-forecast p, :root .profile-summary .muted, :root .mobile-weather-card .mobile-eyebrow, :root .mobile-weather-card p, :root .mobile-weather-card small { color: #bccaef; }
+:root .weather-home-page .weather-hero .data-source, :root .map-forecast a, :root .mobile-weather-card a { color: #f5b301; }
+:root .forecast-status, :root .map-forecast .data-tag, :root .page-heading .active-count, :root .mobile-weather-badge { background: rgba(255,255,255,.12); border: 1px solid rgba(198,212,247,.3); color: #fff; }
+:root .mobile-metrics { background: rgba(255,255,255,.08); border-color: rgba(198,212,247,.25); }
+:root .mobile-metrics span { border-color: rgba(198,212,247,.25); }
+:root .home-heading .button.secondary { background: #f5b301; border-color: #f5b301; color: #0b1a3a; }
+:root .profile-summary .role-pill { background: rgba(245,179,1,.18); color: #f5b301; }
+:root .profile-page .profile-summary .avatar { background: rgba(255,255,255,.14); border: 1px solid rgba(198,212,247,.4); }
+:root .home-heading h1 { max-width: none; }
+
+/* Rótulos com traço dourado */
+:root .eyebrow::before, :root .section-label::before { background: #f5b301; border-radius: 2px; content: ""; display: inline-block; height: 3px; margin-right: 8px; vertical-align: middle; width: 16px; }
+
+/* Métricas */
+:root .weather-home-page .metric { border-radius: 8px; border-top: 3px solid var(--primary); position: relative; }
+:root .weather-home-page .metric:nth-child(2) { border-top-color: var(--gold); }
+:root .weather-home-page .metric:nth-child(3) { border-top-color: var(--ok); }
+:root .weather-home-page .metric small::before { margin-right: 6px; }
+:root .weather-home-page .metric:nth-child(1) small::before { content: "💧"; }
+:root .weather-home-page .metric:nth-child(2) small::before { content: "🌬️"; }
+:root .weather-home-page .metric:nth-child(3) small::before { content: "🌧️"; }
+
+/* Avisos e atalhos */
+:root .weather-home-page .warning-panel[data-severity="CRITICAL"] { background: linear-gradient(180deg, var(--crit-t), var(--surface) 55%); }
+:root .weather-home-page .warning-panel[data-severity="HIGH"] { background: linear-gradient(180deg, var(--high-t), var(--surface) 55%); }
+:root .weather-home-page .warning-panel[data-severity="MODERATE"] { background: linear-gradient(180deg, var(--mod-t), var(--surface) 55%); }
+:root .home-shortcuts { gap: 14px; }
+:root .home-shortcuts a { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 8px; box-shadow: var(--shadow); padding: 18px; transition: transform .15s, border-color .15s; }
+:root .home-shortcuts a:hover { border-left-color: var(--gold); transform: translateY(-2px); }
+:root .shortcut-index { color: var(--gold-ink); font-weight: 800; letter-spacing: .08em; }
+:root .alert-card { border-radius: 8px; }
+:root .alert-card:hover { transform: translateY(-1px); }
+:root .button { background: linear-gradient(115deg, var(--primary), #2a5fe0); border-radius: 8px; }
+:root.light .button { background: linear-gradient(115deg, #1447d4, #2a5fe0); }
+:root .button.secondary, :root.light .button.secondary { background: var(--surface); }
+:root .topbar, :root.light .topbar { box-shadow: var(--shadow); position: relative; z-index: 600; }
+:root .auth-card, :root.light .auth-card { border-radius: 10px; border-top: 3px solid #f5b301; }
+:root .auth-page { background: radial-gradient(900px 480px at 50% -12%, var(--primary-t), transparent 72%), var(--bg); }
+:root .settings-panel { border-radius: 8px; }
+
+/* Botão das informações educativas */
+.edu-button { align-items: center; background: var(--gold-t); border: 1px solid var(--gold); border-radius: 8px; color: var(--gold-ink); display: inline-flex; flex: none; font-size: 13px; font-weight: 700; gap: 7px; height: 40px; justify-content: center; margin-left: 10px; min-width: 40px; padding: 0 12px; text-decoration: none; white-space: nowrap; }
+.edu-button:hover { background: var(--gold); color: #0b1a3a; }
+.edu-button.floating { margin: 0; position: fixed; right: 64px; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 900; }
+:root .mobile-topbar .edu-button { margin-left: auto; margin-right: 8px; }
+:root .mobile-topbar .theme-toggle { margin-left: 0; }
+@media (max-width: 1240px) { .edu-button span { display: none; } .edu-button { padding: 0; width: 40px; } }
+
+/* Página educativa */
+#education-list { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); }
+:root .content-card { border-radius: 10px; border-top: 3px solid var(--gold); display: flex; flex-direction: column; gap: 12px; margin: 0; }
+:root .content-card h2 { margin: 0; }
+:root .content-card p { margin: 0; }
+:root .content-card a { margin-top: auto; }
+.edu-figure { aspect-ratio: 640 / 240; border-radius: 8px; display: block; height: auto; object-fit: contain; width: 100%; }
+
+/* Menu "Mostrar" do mapa */
+.map-show { position: absolute; right: 20px; top: 72px; z-index: 500; }
+.map-show summary { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 700; list-style: none; margin-left: auto; padding: 11px 14px; text-align: center; width: max-content; }
+.map-show summary::-webkit-details-marker { display: none; }
+.map-show summary::before { content: "☰"; margin-right: 7px; }
+.map-show[open] summary { border-color: var(--primary); }
+.map-show-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); color: var(--text); display: grid; gap: 2px; margin-top: 8px; max-width: calc(100vw - 40px); padding: 8px 14px; width: 290px; }
+.map-show-panel label { align-items: center; cursor: pointer; display: flex; font-size: 13px; gap: 10px; min-height: 40px; }
+.map-show-panel input { accent-color: var(--primary); flex: none; height: 17px; width: 17px; }
+@media (max-width: 720px) { .map-show { right: 12px; top: 60px; } }
