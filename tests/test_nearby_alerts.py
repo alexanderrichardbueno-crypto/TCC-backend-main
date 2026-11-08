@@ -101,9 +101,7 @@ def test_nearby_lists_only_alerts_and_forecasts_covering_the_region(
     assert listed["description"] == "Previsão da equipe"
 
 
-def test_nearby_prefers_device_coordinates_without_saving_them(
-    client: TestClient, db, monkeypatch
-):
+def test_nearby_prefers_device_coordinates_without_saving_them(client: TestClient, db, monkeypatch):
     def must_not_run(_db, **_kwargs):
         raise AssertionError("Com coordenadas do aparelho não há busca pela cidade")
 

@@ -133,6 +133,7 @@ h1, h2, .page-heading h1 { font-family: "Sora", sans-serif; }
 /* Mapa */
 :root .weather-map-page { background: var(--bg); }
 :root .map-canvas, :root .weather-map-page #weather-map { background: var(--sea); }
+:root[data-theme="dark"] .weather-map-page .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.92); }
 :root .map-intro h1 span { color: var(--gold-ink); }
 :root .map-forecast { background: var(--surface); border-color: var(--border); box-shadow: var(--shadow); color: var(--text); }
 :root .map-forecast p { color: var(--muted); }

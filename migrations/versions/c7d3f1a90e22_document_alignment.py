@@ -27,7 +27,8 @@ def remove_demonstration_data() -> None:
         f"DELETE FROM alert_reviews WHERE alert_id IN ({demo_alerts})",
         f"DELETE FROM map_areas WHERE alert_id IN ({demo_alerts})",
         f"DELETE FROM panel_notifications WHERE alert_id IN ({demo_alerts})",
-        f"DELETE FROM weather_alerts WHERE id IN ({demo_alerts})",
+        # Sem subconsulta: o MySQL não aceita selecionar da tabela que está apagando.
+        "DELETE FROM weather_alerts WHERE origin = 'DEMO' OR is_demo = :yes",
     ):
         bind.execute(sa.text(statement), {"yes": True})
     bind.execute(sa.text("DELETE FROM forecasts WHERE source_key LIKE 'DEMO-%'"))
