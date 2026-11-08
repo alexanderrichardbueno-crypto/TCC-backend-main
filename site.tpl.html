@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PrevClima · Central meteorológica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#eef2f9; --surface:#ffffff; --surface-2:#f3f6fc; --surface-3:#e6edf9;
+  --border:#d6dfef; --text:#0b1a3a; --muted:#52648a; --faint:#8494b5;
+  --primary:#1447d4; --primary-t:rgba(20,71,212,.10); --on-primary:#fff;
+  --gold:#f5b301; --gold-ink:#8a5d00; --gold-t:rgba(245,179,1,.16);
+  --crit:#d11a33; --crit-t:rgba(209,26,51,.10);
+  --high:#c2500a; --high-t:rgba(232,99,10,.12);
+  --mod:#8f6b00;  --mod-t:rgba(245,196,0,.20);
+  --ok:#13803f;   --ok-t:rgba(19,128,63,.11);
+  --sea:#cfe0f7; --land:#f7faff; --land-line:#8ea4cf; --border-map:#7b93c4;
+  --grat:rgba(30,70,150,.12); --map-text:#243660; --state-text:rgba(30,60,130,.30);
+  --shadow:0 1px 2px rgba(11,26,58,.06),0 10px 30px rgba(11,26,58,.07);
+  --focus:#1447d4;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#040c24; --surface:#0a1734; --surface-2:#0e1f45; --surface-3:#132a58;
+    --border:#1b3163; --text:#e9efff; --muted:#93a6d1; --faint:#6479a8;
+    --primary:#3a74ff; --primary-t:rgba(58,116,255,.18); --on-primary:#fff;
+    --gold:#f5b301; --gold-ink:#f5b301; --gold-t:rgba(245,179,1,.14);
+    --crit:#ff4b5f; --crit-t:rgba(255,75,95,.15);
+    --high:#ff8a1f; --high-t:rgba(255,138,31,.15);
+    --mod:#f5c400;  --mod-t:rgba(245,196,0,.14);
+    --ok:#2fd06a;   --ok-t:rgba(47,208,106,.13);
+    --sea:#071230; --land:#122550; --land-line:#2c4a92; --border-map:#4a6ab8;
+    --grat:rgba(120,150,220,.11); --map-text:#bccaef; --state-text:rgba(150,175,235,.30);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    --focus:#7ea5ff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#040c24; --surface:#0a1734; --surface-2:#0e1f45; --surface-3:#132a58;
+  --border:#1b3163; --text:#e9efff; --muted:#93a6d1; --faint:#6479a8;
+  --primary:#3a74ff; --primary-t:rgba(58,116,255,.18); --on-primary:#fff;
+  --gold:#f5b301; --gold-ink:#f5b301; --gold-t:rgba(245,179,1,.14);
+  --crit:#ff4b5f; --crit-t:rgba(255,75,95,.15);
+  --high:#ff8a1f; --high-t:rgba(255,138,31,.15);
+  --mod:#f5c400;  --mod-t:rgba(245,196,0,.14);
+  --ok:#2fd06a;   --ok-t:rgba(47,208,106,.13);
+  --sea:#071230; --land:#122550; --land-line:#2c4a92; --border-map:#4a6ab8;
+  --grat:rgba(120,150,220,.11); --map-text:#bccaef; --state-text:rgba(150,175,235,.30);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  --focus:#7ea5ff;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+#root{min-height:100%}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.ic{flex:none;vertical-align:-3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- login ---------- */
+.login{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr}
+.login-art{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:48px 32px;text-align:center;color:#fff;overflow:hidden;background:linear-gradient(180deg,#020a24 0%,#031a55 58%,#06308f 100%)}
+.login-art::before{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 50% 42%,rgba(150,185,255,0) 0 92px,rgba(150,185,255,.14) 93px 94px);pointer-events:none}
+.radar{position:relative;width:min(44vh,400px);aspect-ratio:1;border-radius:50%;box-shadow:0 0 90px rgba(47,107,255,.5)}
+.radar img{display:block;width:100%;height:100%;border-radius:50%}
+.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(140,200,255,0) 0deg,rgba(140,200,255,0) 290deg,rgba(150,205,255,.42) 358deg,rgba(255,255,255,0) 360deg);mix-blend-mode:screen;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand-word{font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(40px,5vw,60px);letter-spacing:-.02em;line-height:1;position:relative}
+.brand-word span{color:#fff}.brand-word b{color:var(--gold);font-weight:800}
+.login-art p{position:relative;font-size:18px;font-weight:600;color:#c6d4f7;max-width:22ch}
+.login-form{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--bg)}
+.lf{width:min(420px,100%);display:flex;flex-direction:column;gap:6px}
+.lf h1{font-family:'Sora',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.01em;margin:18px 0 12px}
+.lock-note{display:flex;gap:10px;align-items:center;padding:11px 14px;border-radius:12px;background:var(--gold-t);border:1px solid rgba(245,179,1,.4);color:var(--gold-ink);font-weight:600;font-size:13.5px}
+.lf label{font-weight:600;font-size:13.5px;color:var(--muted);margin-top:10px}
+.field{width:100%;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);outline:none}
+.field:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-t)}
+textarea.field{height:auto;padding:12px 14px;resize:vertical;min-height:96px;line-height:1.5}
+select.field{padding-right:10px}
+.pw{position:relative}.pw .field{padding-right:48px}
+.pw button{position:absolute;right:4px;top:4px;width:40px;height:40px;border:0;background:none;color:var(--muted);border-radius:10px}
+.err{min-height:20px;color:var(--crit);font-size:13.5px;font-weight:600;margin-top:6px}
+.link{background:none;border:0;color:var(--primary);font-weight:700;padding:8px;align-self:center}
+.demo{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--border);color:var(--muted);font-size:13px}
+.demo b{color:var(--text)}
+
+/* ---------- buttons & bits ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:14px;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--primary)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#241a00}
+.btn.danger{color:var(--crit);border-color:var(--crit);background:transparent}
+.btn.danger:hover{background:var(--crit-t)}
+.btn.solid-danger{background:var(--crit);border-color:var(--crit);color:#fff}
+.btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.lg{height:52px;font-size:16px;margin-top:14px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.icon-btn{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.icon-btn:hover{background:var(--surface-2)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:700;background:var(--surface-3);color:var(--muted)}
+.pill.ok{background:var(--ok-t);color:var(--ok)}.pill.crit{background:var(--crit-t);color:var(--crit)}
+.pill.high{background:var(--high-t);color:var(--high)}.pill.mod{background:var(--mod-t);color:var(--mod)}
+.pill.pri{background:var(--primary-t);color:var(--primary)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor}
+.seg{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);flex-wrap:wrap}
+.seg button{height:32px;padding:0 12px;border-radius:9px;border:1px solid transparent;background:none;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);border-color:var(--border);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg button.on.t-ok{background:var(--ok-t);color:var(--ok);border-color:var(--ok)}
+.seg button.on.t-mod{background:var(--mod-t);color:var(--mod);border-color:var(--mod)}
+.seg button.on.t-high{background:var(--high-t);color:var(--high);border-color:var(--high)}
+.seg button.on.t-crit{background:var(--crit-t);color:var(--crit);border-color:var(--crit)}
+.seg button.on.t-pri{background:var(--primary-t);color:var(--primary);border-color:var(--primary)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:13.5px;color:var(--muted)}
+.tab.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.tab i{font-style:normal;opacity:.75;margin-left:4px}
+.hint{color:var(--muted);font-size:13.5px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:16px;background:var(--surface)}
+.empty strong{display:block;color:var(--text);margin-bottom:4px}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:264px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));align-self:start;display:flex;flex-direction:column;gap:22px;padding:22px 16px 16px;background:linear-gradient(180deg,#020a24,#04164a 70%,#052070);color:#c9d6f5;z-index:30}
+.brand{display:flex;align-items:center;gap:12px;padding:0 6px}
+.brand img{border-radius:50%;box-shadow:0 0 22px rgba(47,107,255,.55)}
+.wordmark{font-family:'Sora',sans-serif;font-weight:800;font-size:21px;letter-spacing:-.02em;line-height:1.1}
+.wordmark span{color:#fff}.wordmark b{color:var(--gold)}
+.brand small{color:#8fa4d6;font-size:12px;font-weight:500}
+#nav{display:flex;flex-direction:column;gap:4px}
+.nav-i{display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:12px;border:0;background:none;color:#b9c8ee;font-weight:600;text-align:left}
+.nav-i:hover{background:rgba(255,255,255,.07)}
+.nav-i.on{background:rgba(58,116,255,.24);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+.nav-i .bdg{margin-left:auto;min-width:22px;height:22px;padding:0 7px;border-radius:99px;background:#ff3b4e;color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:16px;background:rgba(255,255,255,.06)}
+.me{display:flex;gap:10px;align-items:center}
+.me strong{display:block;color:#fff;font-size:14px;line-height:1.2}.me small{color:#8fa4d6;font-size:12px}
+.avatar{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#2f6bff,#6a4dff);color:#fff;font-weight:800;font-size:14px}
+.side-tools{display:flex;gap:8px}
+.side-tools .icon-btn{flex:1;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:#dbe5ff}
+.side-tools .icon-btn:hover{background:rgba(255,255,255,.14)}
+.scrim{display:none}
+.main{min-width:0;padding:0 32px 48px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:14px;padding:22px 0 16px;background:var(--bg)}
+.ttl{flex:1;min-width:0}
+.ttl h1{font-family:'Sora',sans-serif;font-size:27px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
+.ttl p{color:var(--muted);font-size:14px}
+.menu-btn{display:none}
+.sync{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ok);padding:6px 12px;border-radius:99px;background:var(--ok-t)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+.panel-h{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:16px 18px 6px}
+.panel-h h2{font-family:'Sora',sans-serif;font-size:16.5px;font-weight:650}
+.panel-b{padding:10px 18px 18px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.spread{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:20px}
+
+/* ---------- dashboard ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:20px}
+.kpi{padding:18px 22px;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--border)}
+.kpi:last-child{border-right:0}
+.kpi-n{font-family:'Sora',sans-serif;font-size:34px;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.kpi-l{color:var(--muted);font-size:13.5px;font-weight:500}
+.dash{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:20px;align-items:start}
+.mapbox{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--sea)}
+.mapgl-host{position:relative;width:100%;aspect-ratio:864/630}
+.mini .mapgl-host{aspect-ratio:864/560}
+.mapgl{position:absolute;inset:0}
+.mapgl-host[data-off]::after{content:attr(data-off);position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--muted);font-size:13.5px;font-weight:600}
+.mapgl .maplibregl-ctrl-attrib{font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;padding:12px 18px 16px;font-size:12.5px;color:var(--muted);font-weight:600}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+.lg-t{background:#39ff14}.lg-1{background:#ffe100}.lg-2{background:#ff7a00}.lg-3{background:#ff1a1a}.lg-4{background:#9d1cff}
+.risk-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.risk-row:last-of-type{border-bottom:0}
+.risk-row .rn{display:flex;align-items:center;gap:10px;flex:1;min-width:120px;font-weight:600}
+.banner{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--gold-t);border:1px solid rgba(245,179,1,.45);margin-top:8px}
+.banner .bi{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:rgba(245,179,1,.25);color:var(--gold-ink)}
+.banner strong{display:block;font-size:14px;line-height:1.3}.banner small{color:var(--muted)}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.log li:last-child{border-bottom:0}
+.log time{margin-left:auto;color:var(--faint);font-size:12.5px;white-space:nowrap}
+.log .lb{width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:8px;flex:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart{width:100%;height:auto}
+.chart text{fill:var(--muted);font-size:11px;font-family:inherit}
+.c-crit{fill:var(--crit)}.c-high{fill:var(--high)}.c-mod{fill:var(--mod)}
+.c-base{stroke:var(--border)}
+
+/* ---------- alerts ---------- */
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .grow{flex:1}
+.search{position:relative;min-width:220px}
+.search .field{height:40px;padding-left:38px}
+.search .ic{position:absolute;left:12px;top:11px;color:var(--faint)}
+.alist{display:flex;flex-direction:column;gap:12px;max-width:880px}
+.al{border-radius:16px;border:1px solid var(--al-c);background:var(--al-t);--al-c:var(--border);--al-t:var(--surface)}
+.al.sev-critico{--al-c:var(--crit);--al-t:var(--crit-t)}.al.sev-alto{--al-c:var(--high);--al-t:var(--high-t)}.al.sev-moderado{--al-c:var(--mod);--al-t:var(--mod-t)}
+.al.off{opacity:.72;--al-c:var(--border);--al-t:var(--surface)}
+.al-head{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;background:none;border:0;text-align:left}
+.al-ic{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:50%;background:var(--al-c);color:#fff}
+.al.off .al-ic{background:var(--faint)}
+.al-main{display:flex;flex-direction:column;flex:1;min-width:0}
+.al-main strong{font-size:17px;line-height:1.25}
+.al-sev{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--al-c)}
+.al.off .al-sev{color:var(--muted)}
+.al-sev .dot{width:7px;height:7px}
+.al-loc{color:var(--muted);font-size:13px;display:flex;gap:5px;align-items:center}
+.al-side{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;white-space:nowrap}
+.al-body{padding:0 16px 16px 74px}
+.al-body .txt{font-size:15.5px;line-height:1.55}
+.recs{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.14)}
+:root:not([data-theme="dark"]) .recs{background:rgba(255,255,255,.7)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .recs{background:rgba(0,0,0,.22)}}
+:root[data-theme="dark"] .recs{background:rgba(0,0,0,.22)}
+.recs h4{margin:0 0 6px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.recs ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.recs li{display:flex;gap:9px;font-size:14.5px}
+.recs li .ic{color:var(--al-c);margin-top:2px}
+.al-foot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:14px;color:var(--muted);font-size:13px}
+.al-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ---------- modal ---------- */
+.modal-back{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(2,8,28,.62);backdrop-filter:blur(3px);overflow:auto}
+.modal{width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.modal.wide{width:min(1040px,100%)}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 6px}
+.mh h2{font-family:'Sora',sans-serif;font-size:20px;font-weight:700}
+.mb{padding:10px 22px 22px}
+.mf{display:flex;gap:10px;justify-content:flex-end;padding:0 22px 22px;flex-wrap:wrap}
+.mgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:26px}
+.fl{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fl>label,.fl>.lbl{font-weight:700;font-size:13.5px}
+.two-f{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.recs-edit{display:flex;flex-direction:column;gap:6px}
+.rec-i{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);font-size:14px}
+.rec-i span{flex:1}
+.rec-i button{border:0;background:none;color:var(--faint);display:grid;place-items:center;width:26px;height:26px;border-radius:8px}
+.rec-i button:hover{color:var(--crit);background:var(--crit-t)}
+.checkrow{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
+.checkrow input{width:18px;height:18px;margin-top:2px;accent-color:var(--primary)}
+.preview{position:sticky;top:0;align-self:start}
+.phone{padding:14px;border-radius:30px;background:linear-gradient(180deg,#06215f,#020a24);border:6px solid #0c1428;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.phone h5{margin:2px 0 12px;color:#fff;font-family:'Sora',sans-serif;font-size:18px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.phone h5 span{font-size:11px;border:1px solid #ff4257;color:#ff4257;padding:2px 9px;border-radius:99px;font-family:'Plus Jakarta Sans'}
+.phone .al{--al-t:rgba(255,255,255,.04)}
+.phone .al.sev-critico{--al-t:rgba(255,66,87,.14)}.phone .al.sev-alto{--al-t:rgba(255,138,31,.14)}.phone .al.sev-moderado{--al-t:rgba(245,196,0,.12)}
+.phone .al,.phone .al *{color:#eaf0ff}
+.phone .al .al-sev{color:var(--al-c)}.phone .al .al-loc,.phone .al-side{color:#93a6d1}
+.phone .recs{background:rgba(0,0,0,.28)}
+.phone .recs li .ic{color:var(--al-c)}
+.phone .al-head{padding:12px}.phone .al-body{padding:0 12px 14px}
+.phone .al-main strong{font-size:16px}.phone .txt{font-size:13.5px}.phone .recs li{font-size:12.5px}
+
+/* ---------- table / lists ---------- */
+.tblw{overflow-x:auto;border-radius:16px}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{font-size:12.5px;color:var(--muted);font-weight:700;text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.u{display:flex;gap:12px;align-items:center}.u strong{display:block;line-height:1.25}.u small{color:var(--muted)}
+.tacts{display:flex;gap:6px;justify-content:flex-end}
+.hist li{align-items:flex-start}
+
+/* ---------- map page ---------- */
+.map-page{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+.map-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.map-bar .sp{flex:1}
+.map-bar .btn.on{background:var(--primary-t);border-color:var(--primary);color:var(--primary)}
+.coords{z-index:2;position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:8px;background:rgba(2,10,36,.72);color:#dbe6ff;font-size:12px;font-weight:600;pointer-events:none}
+.map-hint{z-index:2;position:absolute;left:50%;top:12px;transform:translateX(-50%);padding:8px 14px;border-radius:99px;background:var(--gold);color:#241a00;font-size:13px;font-weight:700;pointer-events:none;max-width:90%;text-align:center}
+.map-side{display:flex;flex-direction:column;gap:14px}
+.chk{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);font-weight:600;font-size:13.5px}
+.chk input{width:18px;height:18px;accent-color:var(--primary)}
+.plist{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
+.pl{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);text-align:left;font-size:13.5px;font-weight:600}
+.pl.on{border-color:var(--primary);background:var(--primary-t)}
+.pl i{width:12px;height:12px;border-radius:3px;flex:none}
+.m-sea{fill:var(--sea)}
+.m-land{fill:var(--land);stroke:var(--land-line);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.m-border{fill:none;stroke:var(--border-map);stroke-width:1;stroke-dasharray:5 4;vector-effect:non-scaling-stroke;opacity:.8}
+.m-grat{stroke:var(--grat);stroke-width:1;vector-effect:non-scaling-stroke}
+.m-gt{fill:var(--faint);font-weight:600}
+.m-state{fill:var(--state-text);font-weight:800;letter-spacing:.14em;text-anchor:middle;pointer-events:none}
+.m-city{fill:var(--map-text);font-weight:700;paint-order:stroke;stroke:var(--land);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+.m-dot{fill:var(--map-text);stroke:var(--land);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.m-home{fill:var(--gold);stroke:#fff;stroke-width:2;vector-effect:non-scaling-stroke}
+.poly{stroke-width:2.2;vector-effect:non-scaling-stroke;cursor:pointer;stroke-linejoin:round}
+.drawing .poly,.static .poly{pointer-events:none}
+.pv-0{fill:rgba(57,255,20,.30);stroke:#39ff14}.pv-1{fill:rgba(255,225,0,.33);stroke:#ffe100}
+.pv-2{fill:rgba(255,122,0,.38);stroke:#ff7a00}.pv-3{fill:rgba(255,26,26,.42);stroke:#ff2a2a}
+.pv-4{fill:rgba(157,28,255,.45);stroke:#a63bff}
+.al-tempestade{fill:rgba(240,200,0,.70);stroke:#ffe100}.al-tornado{fill:rgba(210,20,40,.72);stroke:#ff4257}
+.sel-outline{fill:none;stroke:#fff;stroke-width:2.5;stroke-dasharray:7 5;vector-effect:non-scaling-stroke;pointer-events:none}
+.vtx{fill:#fff;stroke:var(--primary);stroke-width:2.5;vector-effect:non-scaling-stroke;cursor:move}
+.draft{fill:rgba(255,255,255,.12);stroke:#fff;stroke-width:2;stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
+.dvtx{fill:var(--gold);stroke:#fff;stroke-width:2;vector-effect:non-scaling-stroke;pointer-events:none}
+.legend-list{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.legend-list div{display:flex;gap:10px;align-items:center}
+.legend-list i{width:16px;height:14px;border-radius:3px;flex:none}
+.ans{background:rgba(240,200,0,.85)}.atn{background:rgba(210,20,40,.85)}
+/* avisos oficiais do INMET */
+.m-intl{fill:none;stroke:var(--border-map);stroke-width:1.6;vector-effect:non-scaling-stroke;opacity:.9;stroke-linejoin:round}
+.inm{stroke-width:1.6;vector-effect:non-scaling-stroke;cursor:pointer;stroke-linejoin:round;fill-rule:evenodd}
+.inm.fut{stroke-dasharray:6 4}
+.drawing .inm,.static .inm{pointer-events:none}
+.sync[data-act]{cursor:pointer}
+a.btn{text-decoration:none;color:inherit}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:200;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.toast{display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:12px;background:#0b1a3a;color:#fff;font-weight:600;font-size:14px;box-shadow:0 12px 30px rgba(0,0,0,.35);max-width:min(420px,90vw);animation:tin .22s ease-out}
+.toast.err{background:#a3132a}.toast .ic{color:#7dffb0}.toast.err .ic{color:#fff}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .dash,.notif,.map-page{grid-template-columns:1fr}
+  .map-side{order:2}
+}
+@media (max-width:900px){
+  .login{grid-template-columns:1fr}
+  .login-art{padding:32px 20px;min-height:auto}
+  .radar{width:min(46vw,220px)}
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;height:auto;width:270px;padding-top:calc(22px + env(safe-area-inset-top,0px));transform:translateX(-102%);transition:transform .22s}
+  .side.open{transform:none}
+  .scrim.on{display:block;position:fixed;inset:0;background:rgba(2,8,28,.55);z-index:25}
+  .menu-btn{display:grid}
+  .main{padding:0 16px 40px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi:nth-child(2){border-right:0}.kpi:nth-child(-n+2){border-bottom:1px solid var(--border)}
+  .mgrid,.two,.two-f{grid-template-columns:1fr}
+  .al-body{padding-left:16px}
+  .sync{display:none}
+}
+@media (prefers-reduced-motion:reduce){.sweep{animation:none}.toast{animation:none}.side{transition:none}}
+
+/* tela de Estações INMET da central */
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end;margin-top:10px}
+.form-grid .full{grid-column:1/-1}
+.form-grid label,#station-filter label{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600}
+.table-scroll{overflow:auto}
+.notice{margin-bottom:12px;padding:10px 14px;border-radius:10px;background:var(--ok-t,rgba(30,160,90,.14));font-size:14px}
+.notice.error{background:var(--crit-t,rgba(220,40,50,.14));color:var(--crit)}
+@media (max-width:640px){.form-grid{grid-template-columns:1fr}}
+
+</style>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div id="modal-root"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<!-- Logo: o Streamlit troca os marcadores pela imagem informada em render_site (se existir).
+     Sem logo, o painel mostra o logo reserva em SVG. -->
+<script type="text/plain" id="logo-big">data:image/png;base64,__LOGO_BIG__</script>
+<script type="text/plain" id="logo-small">data:image/png;base64,__LOGO_SMALL__</script>
+<!-- Chave do MapTiler (variável MAPTILER_KEY do servidor; sem chave o mapa usa o OpenFreeMap). -->
+<script type="text/plain" id="maptiler-key">__MAPTILER_KEY__</script>
+
+<script type="text/plain" id="api-base">__API_BASE__</script>
+<script type="application/json" id="inmet-data">__INMET_DATA__</script>
+<script>
+window.PCE=(function(){
+ let b=(document.getElementById('api-base').textContent||'').trim();
+ if(!b||b.indexOf('__API_'+'BASE__')>=0)b='http://127.0.0.1:18080';
+ let t='';try{t=sessionStorage.getItem('prevclima_token')||'';localStorage.removeItem('prevclima_admin_v2');}catch(e){}
+ return {base:b.replace(/\/+$/,''),get token(){return t;},setToken(v){t=v||'';try{if(t)sessionStorage.setItem('prevclima_token',t);else sessionStorage.removeItem('prevclima_token');}catch(e){}}};
+})();
+window.PrevClima={severityName:s=>s,async request(path,o={}){
+ const headers=new Headers(o.headers||{});if(o.body&&!headers.has('Content-Type'))headers.set('Content-Type','application/json');
+ if(PCE.token)headers.set('Authorization','Bearer '+PCE.token);
+ let r;try{r=await fetch(PCE.base+'/api/v1'+path,{...o,headers,credentials:'omit'});}
+ catch(e){const x=new Error('Não foi possível conectar ao PrevClima. Verifique sua conexão.');x.status=0;throw x;}
+ const d=r.status===204?null:await r.json().catch(()=>null);
+ if(!r.ok){const m=d&&d.detail;const x=new Error((Array.isArray(m)?m.map(i=>i.msg).join('. '):m)||'Não foi possível concluir a solicitação.');x.status=r.status;throw x;}
+ return d;}};
+</script>
+<script>
+(function(){
+"use strict";
+const api = window.PrevClima.request;
+const esc = (value) =>
+  String(value ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const date = (value) =>
+  value ? new Date(value).toLocaleString("pt-BR") : "Não disponível";
+const metric = (value, unit = "") =>
+  value == null ? "—" : `${Number(value).toLocaleString("pt-BR")}${unit}`;
+const empty = (message) => `<div class="empty">${esc(message)}</div>`;
+const field = (label, name, type = "text", extra = "") =>
+  `<label>${label}<input class="field" name="${name}" type="${type}" ${extra}></label>`;
+const panel = (title, body, action = "") =>
+  `<section class="panel"><div class="panel-h"><h2>${title}</h2>${action}</div><div class="panel-b">${body}</div></section>`;
+function notify(message, error = false) {
+  const node = document.querySelector("#notice");
+  node.textContent = message;
+  node.className = error ? "notice error" : "notice";
+  node.hidden = false;
+}
+async function action(button, operation) {
+  button.disabled = true;
+  try {
+    return await operation();
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+function submit(form, handler) {
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    action(form.querySelector("[type=submit]"), () =>
+      handler(Object.fromEntries(new FormData(form))),
+    );
+  });
+}
+const json = (method, body) => ({ method, body: JSON.stringify(body) });
+function alertCard(a) {
+  const color = { LOW: "ok", MODERATE: "mod", HIGH: "high", CRITICAL: "crit" }[
+    a.severity
+  ];
+  return `<article class="data-card"><div class="row spread"><strong>${esc(a.title)}</strong><span class="pill ${color}">${esc(PrevClima.severityName(a.severity))}</span></div><p>${esc(a.message)}</p><p class="hint">${esc(a.area_name)} · ${esc(a.source_name)}</p><p class="hint">Até ${date(a.valid_until)}</p><ul>${a.recommendations.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></article>`;
+}
+
+
+async function stationView(host, { readOnly = false } = {}) {
+  host.innerHTML = `<div class="toolbar"><p class="grow hint">Medições observadas pelo INMET. Horários exibidos no seu fuso local.</p><button id="catalog-sync" class="btn primary">Atualizar catálogo</button></div>
+    <div class="two"><div class="stack">${panel("Estações meteorológicas", `<form id="station-filter" class="row">${field("UF", "state", "text", 'maxlength="2" placeholder="SP"')}<button type="submit" class="btn">Filtrar</button></form><label>Estação<select id="station-select" class="field"><option value="">Selecione uma estação</option></select></label><p id="station-meta" class="hint"></p><form id="station-sync" class="form-grid">${field("De", "start", "date", "required")}${field("Até", "end", "date", "required")}<button class="btn primary" type="submit">Consultar INMET</button></form>`)}
+    ${panel("Importar histórico BDMEP", `<p class="hint">Aceita o JSON de get_dados() do INMET-API-REST e o CSV do INMET-API-temperature. Dados históricos permanecem identificados como BDMEP.</p><form id="history-import" class="form-grid"><label>Formato<select name="format" class="field"><option value="temperature-csv">INMET-API-temperature · CSV</option><option value="rest-json">INMET-API-REST · JSON</option></select></label><label>Período do arquivo<select class="field" name="period"><option value="HOURLY">Horário / DAYFULL</option><option value="DAILY">Diário</option><option value="MONTHLY">Mensal</option></select></label><label class="full">Arquivo<input name="file" type="file" accept=".csv,.json" required></label><button class="btn" type="submit">Importar registros</button></form>`)}</div>
+    ${panel("Histórico de observações", '<div id="observations">Selecione uma estação para consultar.</div>')}</div>`;
+  const select = host.querySelector("#station-select");
+  const syncForm = host.querySelector("#station-sync");
+  syncForm.elements.start.value = new Date(Date.now() - 86400000)
+    .toISOString()
+    .slice(0, 10);
+  syncForm.elements.end.value = new Date().toISOString().slice(0, 10);
+  let stations = [];
+  async function loadStations(state = "") {
+    const previous = select.value;
+    stations = await api(
+      `/stations?limit=1000${state ? `&state=${encodeURIComponent(state)}` : ""}`,
+    );
+    select.innerHTML =
+      '<option value="">Selecione uma estação</option>' +
+      stations
+        .map(
+          (s) =>
+            `<option value="${esc(s.code)}">${esc(s.name)} · ${esc(s.state)} · ${esc(s.code)}</option>`,
+        )
+        .join("");
+    select.value = stations.some((s) => s.code === previous) ? previous : "";
+    if (!select.value && stations.length)
+      host.querySelector("#observations").innerHTML = empty(
+        "Selecione uma estação para consultar.",
+      );
+    if (!stations.length)
+      host.querySelector("#observations").innerHTML = empty(
+        readOnly
+          ? "Nenhuma estação disponível no momento."
+          : "Catálogo vazio. Atualize o catálogo ou importe um arquivo BDMEP.",
+      );
+  }
+  async function loadObservations() {
+    if (!select.value) {
+      host.querySelector("#station-meta").textContent = "";
+      host.querySelector("#observations").innerHTML = empty("Selecione uma estação para consultar.");
+      return;
+    }
+    const station = stations.find((s) => s.code === select.value);
+    host.querySelector("#station-meta").textContent =
+      `${station.kind === "AUTOMATIC" ? "Automática" : "Convencional"} · ${station.latitude ?? "—"}, ${station.longitude ?? "—"}`;
+    const data = await api(
+      `/stations/${encodeURIComponent(select.value)}/observations?limit=100`,
+    );
+    const latest = data[0];
+    host.querySelector("#observations").innerHTML = data.length
+      ? `<p class="hint">Até 100 registros mais recentes · ${latest.source === "BDMEP" ? "Histórico BDMEP" : "INMET"}${Date.now() - new Date(latest.observed_at) > 86400000 ? " · Dados anteriores às últimas 24 h" : ""}</p><div class="table-scroll"><table><thead><tr><th>Observação</th><th>Período</th><th>°C</th><th>Umidade</th><th>Chuva</th><th>Vento</th></tr></thead><tbody>${data.map((o) => `<tr><td>${date(o.observed_at)}<small>${esc(o.source)}</small></td><td>${esc({ HOURLY: "Horário", DAILY: "Diário", MONTHLY: "Mensal" }[o.period])}</td><td>${metric(o.temperature_c)}</td><td>${metric(o.humidity, "%")}</td><td>${metric(o.precipitation_mm, " mm")}</td><td>${metric(o.wind_ms, " m/s")}</td></tr>`).join("")}</tbody></table></div>`
+      : empty(
+          readOnly
+            ? "Nenhuma medição disponível para esta estação."
+            : "Nenhuma medição salva. Consulte o INMET para o intervalo selecionado.",
+        );
+  }
+  select.addEventListener("change", () => action(select, loadObservations));
+  submit(host.querySelector("#station-filter"), async (data) => {
+    await loadStations(data.state.trim().toUpperCase());
+  });
+  if (readOnly) {
+    host.querySelector("#catalog-sync").remove();
+    syncForm.remove();
+    host.querySelector("#history-import").closest(".panel").remove();
+    await loadStations();
+    return;
+  }
+  host.querySelector("#catalog-sync").addEventListener("click", (event) =>
+    action(event.currentTarget, async () => {
+      const result = await api("/stations/sync-catalog", { method: "POST" });
+      await loadStations();
+      notify(
+        `${result.imported} estações atualizadas; ${result.skipped} registros ignorados.`,
+      );
+    }),
+  );
+  submit(syncForm, async (data) => {
+    if (!select.value) throw new Error("Selecione uma estação.");
+    const result = await api(
+      `/stations/${select.value}/sync`,
+      json("POST", data),
+    );
+    await loadObservations();
+    notify(
+      `${result.inserted} medições novas; ${result.updated} atualizadas; ${result.skipped} ignoradas.`,
+    );
+  });
+  submit(host.querySelector("#history-import"), async (data) => {
+    if (data.file.size > 2000000)
+      throw new Error("O arquivo deve ter até 2 MB.");
+    const result = await api(
+      "/stations/import",
+      json("POST", {
+        format: data.format,
+        period: data.period,
+        content: await data.file.text(),
+      }),
+    );
+    await loadStations();
+    notify(
+      `${result.inserted} registros importados, ${result.updated} atualizados e ${result.skipped} ignorados.`,
+    );
+  });
+  await loadStations();
+}
+
+window.PrevStations=stationView;
+})();
+</script>
+<script>
+(function(){
+'use strict';
+/* ============ logo ============ */
+/* Causa do erro: o template só tinha "data:image/png;base64,__LOGO_BIG__" e dependia 100% do Python
+   substituir o marcador. Sem a substituição (ou com base64 inválido, ex.: b'...' ou com quebras de linha)
+   a imagem quebrava em todas as páginas. Agora o valor é limpo, validado e há um logo reserva. */
+const LOGO_FALLBACK='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="g" cx="50%" cy="42%" r="62%"><stop offset="0" stop-color="#0b46c8"/><stop offset="1" stop-color="#020a24"/></radialGradient></defs><circle cx="100" cy="100" r="100" fill="url(#g)"/><g fill="none" stroke="#9cbcff" stroke-opacity=".35" stroke-width="2"><circle cx="100" cy="100" r="34"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="86"/><path d="M100 14v172M14 100h172"/></g><path d="M62 114a24 24 0 0 1 9-46 33 33 0 0 1 63 9 20 20 0 0 1 3 37z" fill="#fff"/><path d="M108 98 90 128h14l-8 28 27-38h-15l9-20z" fill="#f5b301"/></svg>');
+function readLogo(id,glob){
+ let s='';try{const el=document.getElementById(id);s=el?el.textContent:'';}catch(e){}
+ s=String(s||'').replace(/\s+/g,'');
+ s=s.replace(/^(data:[^,]*,)b['"](.*)['"]$/i,'$1$2');            // bytes do Python: b'....'
+ if(!s||s.indexOf('__LOGO_')>=0){const g=window[glob];return typeof g==='string'&&g?g:null;}
+ const m=s.match(/^data:image\/[a-z0-9+.-]+;base64,(.*)$/i);
+ if(!m)return s;                                                  // já é uma URL ou data URI completo
+ let b=m[1];
+ if(/^data:/i.test(b))return b;                                   // prefixo duplicado
+ if(/^(https?:)?\/\/|^\.{0,2}\/|\.(png|jpe?g|svg|webp|gif)(\?.*)?$/i.test(b))return b; // trocaram por um caminho
+ b=b.replace(/-/g,'+').replace(/_/g,'/');
+ if(!/^[A-Za-z0-9+/]+=*$/.test(b)||b.length<40)return null;
+ const mime=b.startsWith('/9j/')?'image/jpeg':b.startsWith('UklG')?'image/webp':b.startsWith('R0lG')?'image/gif':(b.startsWith('PHN2')||b.startsWith('PD94'))?'image/svg+xml':'image/png';
+ return 'data:'+mime+';base64,'+b;
+}
+const LOGO_BIG=readLogo('logo-big','PREVCLIMA_LOGO_BIG')||readLogo('logo-small','PREVCLIMA_LOGO_SMALL')||LOGO_FALLBACK;
+const LOGO_SMALL=readLogo('logo-small','PREVCLIMA_LOGO_SMALL')||LOGO_BIG;
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.hasAttribute('data-logo')&&t.getAttribute('src')!==LOGO_FALLBACK)t.setAttribute('src',LOGO_FALLBACK);},true);
+const KEY='prevclima_central_v2';
+const MIN=60000,HOUR=3600000,DAY=86400000;
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=p=>p+Math.random().toString(36).slice(2,8);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt=n=>Number(n).toLocaleString('pt-BR');
+
+/* ============ ícones ============ */
+const IC={
+dash:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
+file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+userplus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+send:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"/><circle cx="12" cy="12" r="3"/>',
+pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
+trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/>',
+layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
+pointer:'<path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51z"/>',
+pen:'<path d="m12 19 7-7 3 3-7 7z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18z"/><path d="m2 2 7.6 7.6"/><circle cx="11" cy="11" r="2"/>',
+undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
+menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+up:'<path d="m18 15-6-6-6 6"/>',
+down:'<path d="m6 9 6 6 6-6"/>',
+clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+drop:'<path d="M12 2.7s6 6.3 6 10.8a6 6 0 0 1-12 0C6 9 12 2.7 12 2.7z"/>',
+wind:'<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+bolt:'<path d="M6 16.3A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 .5 9"/><path d="m13 12-3 5h4l-3 5"/>',
+zap:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+hail:'<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v2M8 14v2M16 20h.01M8 20h.01M12 16v2M12 22h.01"/>',
+rain:'<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6M8 14v6M12 16v6"/>',
+tornado:'<path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20H9"/>',
+cyclone:'<circle cx="12" cy="12" r="2"/><path d="M12 4a8 8 0 0 1 8 8M12 20a8 8 0 0 1-8-8M4 12a8 8 0 0 1 8-8M20 12a8 8 0 0 1-8 8"/>',
+pin:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+x:'<path d="M18 6 6 18M6 6l12 12"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+cam:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+ban:'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+zoomin:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/>',
+zoomout:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M8 11h6"/>',
+target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>',
+tree:'<path d="M12 22v-6"/><path d="M12 16a5 5 0 0 0 4-8 4 4 0 0 0-8 0 5 5 0 0 0 4 8z"/>',
+mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+mountain:'<path d="m8 3 4 8 5-5 5 15H2z"/>',
+code:'<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>'
+};
+const ico=(n,s=18)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
+
+/* ============ domínio ============ */
+const TIPOS={
+ tempestade:{nome:'Alerta de tempestade severa',i:'bolt'},
+ tornado:{nome:'Alerta de tornado',i:'tornado'}
+};
+const SEV={critico:{n:'Crítico'},alto:{n:'Alto'},moderado:{n:'Moderado'}};
+const CIDADES_RISCO=['Mongaguá','Santos','São Paulo','Campinas','Curitiba','Florianópolis'];
+
+/* ============ cidades de referência ============ */
+const CITIES=[
+ {n:'São Paulo',lon:-46.63,lat:-23.55,major:1,reg:'Grande São Paulo',dx:-7,dy:-5,a:'end'},
+ {n:'Campinas',lon:-47.06,lat:-22.9,major:1,reg:'Campinas e região',dx:-7,dy:-4,a:'end'},
+ {n:'Santos',lon:-46.33,lat:-23.96,major:0,reg:'Baixada Santista',dx:8,dy:-2,a:'start'},
+ {n:'Mongaguá',lon:-46.63,lat:-24.09,major:0,reg:'Baixada Santista',dx:-8,dy:12,a:'end',home:1},
+ {n:'Ribeirão Preto',lon:-47.81,lat:-21.18,major:1,reg:'Norte de São Paulo',dx:7,dy:4,a:'start'},
+ {n:'Ubatuba',lon:-45.07,lat:-23.43,major:0,reg:'Litoral Norte SP',dx:6,dy:-5,a:'start'},
+ {n:'Registro',lon:-47.85,lat:-24.5,major:0,reg:'Vale do Ribeira',dx:-7,dy:4,a:'end'},
+ {n:'Iguape',lon:-47.56,lat:-24.71,major:0,reg:'Litoral Sul',dx:-7,dy:12,a:'end'},
+ {n:'Curitiba',lon:-49.27,lat:-25.43,major:1,reg:'Curitiba e região',dx:-7,dy:-5,a:'end'},
+ {n:'Paranaguá',lon:-48.51,lat:-25.52,major:0,reg:'Litoral do Paraná',dx:7,dy:10,a:'start'},
+ {n:'Londrina',lon:-51.16,lat:-23.31,major:1,reg:'Norte do Paraná',dx:7,dy:-5,a:'start'},
+ {n:'Maringá',lon:-51.94,lat:-23.42,major:0,reg:'Norte do Paraná',dx:-7,dy:12,a:'end'},
+ {n:'Ponta Grossa',lon:-50.16,lat:-25.09,major:0,reg:'Curitiba e região',dx:7,dy:-4,a:'start'},
+ {n:'Cascavel',lon:-53.46,lat:-24.96,major:0,reg:'Oeste do Paraná',dx:7,dy:-4,a:'start'},
+ {n:'Joinville',lon:-48.85,lat:-26.3,major:0,reg:'Norte de Santa Catarina',dx:-7,dy:12,a:'end'},
+ {n:'Florianópolis',lon:-48.55,lat:-27.6,major:1,reg:'Grande Florianópolis',dx:-7,dy:4,a:'end'},
+ {n:'Chapecó',lon:-52.62,lat:-27.1,major:0,reg:'Oeste de Santa Catarina',dx:7,dy:-4,a:'start'},
+ {n:'Rio de Janeiro',lon:-43.2,lat:-22.9,major:1,reg:'Grande São Paulo',dx:-7,dy:-6,a:'end'}
+];
+/* capitais: aparecem quando o mapa mostra o país inteiro */
+function bboxOf(rings){let a=[1e9,1e9,-1e9,-1e9];rings.forEach(r=>r.forEach(p=>{if(p[0]<a[0])a[0]=p[0];if(p[1]<a[1])a[1]=p[1];if(p[0]>a[2])a[2]=p[0];if(p[1]>a[3])a[3]=p[1];}));return a[0]>a[2]?null:a;}
+function unionBB(a,b){return !a?b:!b?a:[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[2],b[2]),Math.max(a[3],b[3])];}
+const centroid=pts=>[pts.reduce((a,p)=>a+p[0],0)/pts.length,pts.reduce((a,p)=>a+p[1],0)/pts.length];
+const LNAME={0:'Tempestades não severas',1:'Nível 1',2:'Nível 2',3:'Nível 3',4:'Nível 4'};
+const LCOL={0:'#39ff14',1:'#ffe100',2:'#ff7a00',3:'#ff1a1a',4:'#9d1cff'};
+
+/* ============ estado (vem do servidor: /api/v1/panel/state) ============ */
+/* alertas, previsões e atividade ficam no banco e são compartilhados pela equipe. */
+function emptyState(){return {session:false,me:null,alerts:[],polys:[],users:[],log:[],stations:0};}
+let S=emptyState();
+try{const th=localStorage.getItem(KEY+'_theme');if(th)document.documentElement.setAttribute('data-theme',th);}catch(e){}
+
+/* tradução entre os códigos da API e os nomes usados na tela */
+const T2EV={tempestade:'SEVERE_STORM',tornado:'TORNADO'};
+const EV2T=Object.fromEntries(Object.entries(T2EV).map(([k,v])=>[v,k]));
+const SV2S={MODERATE:'moderado',HIGH:'alto',CRITICAL:'critico',LOW:'moderado'};
+const pdate=v=>v?Date.parse(v):null;
+const sid=v=>v==null?null:String(v);
+
+function fromServer(st){
+ const me=st.me;
+ S.me={id:sid(me.id),nome:me.name,email:me.email,funcao:'Meteorologista',role:me.role};
+ const ring=g=>g&&g.coordinates&&g.coordinates[0]?g.coordinates[0].slice(0,-1):[];
+ S.alerts=st.alerts.map(a=>({id:sid(a.id),titulo:a.title,tipo:EV2T[a.event_type]||'tempestade',sev:SV2S[a.severity]||'alto',regiao:a.area_name,texto:a.message,recs:a.recommendations||[],
+  criado:pdate(a.issued_at),fim:pdate(a.valid_until),status:a.closed_at?'encerrado':'ativo',por:a.created_by_name||'—',pts:ring(a.polygon)}));
+ S.polys=st.forecasts.map(f=>({id:'p'+f.id,fid:sid(f.id),kind:'prev',level:f.level,nome:LNAME[f.level],texto:f.description,pts:f.points,ini:pdate(f.issued_at),fim:pdate(f.valid_until),editaAte:pdate(f.editable_until),por:f.created_by_name||'—'}))
+  .concat(S.alerts.filter(a=>isActive(a)&&a.pts.length>2).map(a=>({id:'a'+a.id,alertId:a.id,kind:'alerta',sub:a.tipo,nome:a.titulo,texto:a.texto,pts:a.pts,fim:a.fim,por:a.por})));
+ S.log=st.activity.map(l=>({ts:pdate(l.created_at),txt:l.text}));
+ S.stations=st.stations_total;
+}
+
+/* chamadas à API do PrevClima (sessão por cookie + token CSRF) */
+async function api(path,opt={}){
+ const method=(opt.method||'GET').toUpperCase();const headers={'Accept':'application/json'};
+ if(opt.body!==undefined)headers['Content-Type']='application/json';
+ if(PCE.token)headers['Authorization']='Bearer '+PCE.token;
+ let r;
+ try{r=await fetch(PCE.base+'/api/v1'+path,{method,headers,credentials:'omit',cache:'no-store',body:opt.body!==undefined?JSON.stringify(opt.body):undefined});}
+ catch(e){const er=new Error('Não foi possível falar com o servidor do PrevClima. Verifique a conexão.');er.status=0;throw er;}
+ const data=r.status===204?null:await r.json().catch(()=>null);
+ if(!r.ok){const d=data&&data.detail;const msg=Array.isArray(d)?d.map(x=>x.msg).join('. '):d;
+  const er=new Error({'Autenticação necessária':'Sua sessão expirou. Entre de novo.','Permissão insuficiente':'Sua conta não tem permissão para fazer isso.','Token CSRF inválido':'Sua sessão expirou. Entre de novo.'}[msg]||msg||'Não foi possível concluir a operação.');
+  er.status=r.status;
+  if(r.status===401){PCE.setToken('');if(S.session&&!opt.quiet){S.session=false;render();}}
+  throw er;}
+ return data;}
+let syncBusy=null;
+function refresh(){if(!syncBusy)syncBusy=api('/panel/state').then(st=>{fromServer(st);S.session=true;}).finally(()=>{syncBusy=null;});return syncBusy;}
+/* executa uma ação no servidor, recarrega o estado e mostra o erro, se houver */
+async function run(fn,ok){
+ let r;
+ try{r=await fn();}
+ catch(e){if(e.status!==401){toast(e.message,true);refresh().then(rerenderAll,()=>{});}return {ok:false,e};}
+ try{await refresh();}catch(e){}
+ if(ok)toast(typeof ok==='function'?ok(r):ok);
+ return {ok:true,r};}
+function rerenderAll(){if(!S.session)return;if(UI.modal)return;
+ if(UI.page==='mapa'){renderMapBar();const ms=$('#map-side');if(ms&&!ms.contains(document.activeElement))renderMapSide();drawMap();renderNav();}
+ else rerender();}
+
+const UI={page:'dashboard',alertF:'todos',alertQ:'',open:new Set(),userQ:'',usersLoaded:false,riskCity:'Mongaguá',sideOpen:false,modal:null,form:null,member:{nome:'',email:'',senha:''},account:null,
+ map:{tool:'select',drawKind:'prev',sel:null,selInm:null,moved:false,focus:null,draft:[],cursor:null,layers:{prev:true,alerta:true,inmHoje:true,inmFut:true}}};
+
+const root=$('#root');
+const ME=()=>S.me||{id:null,nome:'—',funcao:'',email:''};
+const initials=n=>n.split(' ').filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase();
+function ago(ts){const d=Date.now()-ts;if(d<MIN)return 'agora';if(d<HOUR)return 'Há '+Math.floor(d/MIN)+' min';if(d<DAY)return 'Há '+Math.floor(d/HOUR)+' h';return 'Há '+Math.floor(d/DAY)+' d';}
+const fdate=ts=>new Date(ts).toLocaleDateString('pt-BR');
+const isActive=a=>a.status==='ativo'&&a.fim>Date.now();
+function restante(a){if(a.status!=='ativo')return 'Encerrado';const ms=a.fim-Date.now();if(ms<=0)return 'Prazo expirado';const h=Math.floor(ms/HOUR),m=Math.floor(ms%HOUR/MIN);return 'Expira em '+(h?h+' h ':'')+m+' min';}
+const activeAlerts=()=>S.alerts.filter(isActive);
+const canEdit=p=>p&&p.kind==='prev'&&Date.now()<p.editaAte;
+const getPoly=id=>S.polys.find(p=>p.id===id);
+function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.innerHTML=ico(err?'alert':'check',18)+'<span>'+esc(msg)+'</span>';$('#toasts').appendChild(t);setTimeout(()=>t.remove(),3600);}
+
+/* ============ INMET: avisos, previsão e estações (dados oficiais) ============ */
+const INMET_API='https://apiprevmet3.inmet.gov.br';
+const INMET_CK=KEY+'_inmet_v1';
+const INMET_TTL=HOUR;          // revalida de hora em hora; na virada do dia busca de novo obrigatoriamente
+const GEO={'Mongaguá':'3531100','Santos':'3548500','São Paulo':'3550308','Campinas':'3509502','Curitiba':'4106902','Florianópolis':'4205407'};
+const ISEV={
+ 'Perigo Potencial':{n:'Perigo potencial',lvl:'baixo',t:'mod',c:'#ffe100',r:1},
+ 'Perigo':{n:'Perigo',lvl:'medio',t:'high',c:'#ff8c00',r:2},
+ 'Grande Perigo':{n:'Grande perigo',lvl:'alto',t:'crit',c:'#e3001b',r:3}};
+const INM={hoje:[],futuro:[],ts:0,day:'',status:'idle',src:'',err:'',city:{}};
+const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function sevInfo(s){s=String(s||'').trim().toLowerCase();if(s.includes('grande'))return ISEV['Grande Perigo'];if(s.includes('potencial'))return ISEV['Perigo Potencial'];if(s.includes('perigo'))return ISEV['Perigo'];return ISEV['Perigo Potencial'];}
+const txt=v=>v==null?'':Array.isArray(v)?v.map(txt).filter(Boolean).join(' · '):typeof v==='object'?Object.values(v).map(txt).filter(Boolean).join(' · '):String(v).trim();
+const lst=v=>v==null?[]:Array.isArray(v)?v.map(txt).filter(Boolean):String(v).split(/\s*[;\n]\s*/).map(s=>s.trim()).filter(Boolean);
+function num(v){if(v==null||v==='')return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)&&n>-9000&&n<9000?n:null;}
+function idate(d,h){
+ if(!d)return null;let s=String(d).trim();if(h&&!/\d{2}:\d{2}/.test(s))s+=' '+String(h).trim();
+ let m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);if(m)return new Date(+m[1],m[2]-1,+m[3],+(m[4]||0),+(m[5]||0)).getTime();
+ m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):?(\d{2}))?/);if(m)return new Date(+m[3],m[2]-1,+m[1],+(m[4]||0),+(m[5]||0)).getTime();
+ const t=Date.parse(s);return isNaN(t)?null:t;}
+const fdh=ts=>ts?new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+const fmtPer=a=>(a.ini?fdh(a.ini):'—')+' até '+(a.fim?fdh(a.fim):'—');
+/* polígono: aceita GeoJSON (objeto ou texto), MultiPolygon, WKT ou a lista "lat,lon" do CAP */
+function orient(r){
+ let v=0;r.forEach(p=>{if(p[0]<-28&&p[1]>-36&&p[1]<8)v++;else if(p[1]<-28&&p[0]>-36&&p[0]<8)v--;});const sw=v<0;
+ const out=[];let last=null;
+ r.forEach(p=>{let q=sw?[+p[1],+p[0]]:[+p[0],+p[1]];if(!isFinite(q[0])||!isFinite(q[1]))return;
+  if(last&&Math.abs(q[0]-last[0])+Math.abs(q[1]-last[1])<0.02)return;q=[+q[0].toFixed(3),+q[1].toFixed(3)];out.push(q);last=q;});
+ return out;}
+function ringsFrom(g){
+ if(!g)return [];
+ if(typeof g==='string'){const s=g.trim();
+  if(s[0]==='{'||s[0]==='['){try{return ringsFrom(JSON.parse(s));}catch(e){}}
+  return s.split(/\)\s*,\s*\(/).map(p=>{const n=p.match(/-?\d+(?:\.\d+)?/g)||[];const r=[];for(let i=0;i+1<n.length;i+=2)r.push([+n[i],+n[i+1]]);return r;}).filter(r=>r.length>=3).map(orient).filter(r=>r.length>=3);}
+ if(Array.isArray(g)){if(!g.length||typeof g[0]==='number')return [];
+  if(Array.isArray(g[0])&&typeof g[0][0]==='number'){const r=orient(g);return r.length>=3?[r]:[];}
+  return g.flatMap(ringsFrom);}
+ if(typeof g==='object'){
+  if(g.type==='FeatureCollection')return (g.features||[]).flatMap(f=>ringsFrom(f.geometry));
+  if(g.type==='Feature')return ringsFrom(g.geometry);
+  if(g.type==='GeometryCollection')return (g.geometries||[]).flatMap(ringsFrom);
+  if(g.coordinates)return ringsFrom(g.coordinates);}
+ return [];}
+function normAviso(a,grupo){
+ const rings=ringsFrom(a.poligono||a.polygon||a.geometria||a.geometry||a.area);
+ const d0=txt(a.descricao);let ev=txt(a.evento||a.titulo||a.event)||(d0.length<=60?d0:'');
+ if(!ev){const m=d0.match(/aviso de ([^.]+?)(?:\.|$)/i);ev=m?m[1]:'Aviso meteorológico';}
+ ev=ev.replace(/^aviso de\s*/i,'').replace(/\.\s*severidade.*$/i,'');
+ const cor0=String(a.aviso_cor||a.cor||'').trim(),sev=txt(a.severidade||a.severity)||'Perigo Potencial';
+ const mun=txt(a.municipios);
+ return {id:String(a.id??a.id_aviso??uid('in')),seq:+(a.id_sequencia||a.sequencia||0),grupo,ev,sev,
+  cor:/^#[0-9a-f]{6}$/i.test(cor0)?cor0:sevInfo(sev).c,
+  ini:idate(a.inicio)||idate(a.data_inicio,a.hora_inicio),fim:idate(a.fim)||idate(a.data_fim,a.hora_fim),
+  desc:d0.length>60?d0:'',estados:txt(a.estados),mun,nmun:(mun.match(/\(\d{7}\)/g)||[]).length,geo:txt(a.geocodes),
+  areas:txt(a.microrregioes||a.mesorregioes),riscos:lst(a.riscos),instr:lst(a.instrucoes),rings,bb:bboxOf(rings)};}
+function dedupe(L){const m=new Map();L.forEach(a=>{const o=m.get(a.id);if(!o||a.seq>=o.seq)m.set(a.id,a);});return [...m.values()].sort((a,b)=>sevInfo(b.sev).r-sevInfo(a.sev).r||(a.ini||0)-(b.ini||0));}
+function parseAvisos(j){
+ if(!j||typeof j!=='object')throw new Error('resposta vazia');
+ let hoje=j.hoje,fut=j.futuro;if(Array.isArray(j)){hoje=j;fut=[];}
+ if(!Array.isArray(hoje)&&!Array.isArray(fut))throw new Error('formato inesperado');
+ return {hoje:dedupe((hoje||[]).map(a=>normAviso(a,'hoje'))),futuro:dedupe((fut||[]).map(a=>normAviso(a,'futuro')))};}
+async function fetchJSON(url,ms=20000){
+ const ac=typeof AbortController!=='undefined'?new AbortController():null;const t=ac?setTimeout(()=>ac.abort(),ms):0;
+ try{const r=await fetch(url,{signal:ac?ac.signal:undefined,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+ catch(e){throw new Error(e&&e.name==='AbortError'?'tempo esgotado':(e&&e.message)||'falha de rede');}
+ finally{if(t)clearTimeout(t);}}
+/* busca no INMET direto pelo navegador; se não der (CORS, rede, bloqueio), usa a cópia do servidor do PrevClima */
+async function inmetJSON(path){
+ try{const j=await fetchJSON(INMET_API+'/'+path);return {j,src:'api'};}
+ catch(e){
+  const d=serverData();let j=null,m;
+  if(d){if(path==='avisos/ativos')j=d.avisos;
+   else if((m=path.match(/^previsao\/(\d{7})$/)))j=d.cidades&&d.cidades[m[1]]&&d.cidades[m[1]].previsao;
+   else if((m=path.match(/^estacao\/proxima\/(\d{7})$/)))j=d.cidades&&d.cidades[m[1]]&&d.cidades[m[1]].estacao;}
+  if(j)return {j,src:'servidor'};
+  throw e;}}
+function serverData(){try{const el=document.getElementById('inmet-data');const s=el?el.textContent.trim():'';if(!s||s.indexOf('__INMET_'+'DATA__')>=0)return null;return JSON.parse(s);}catch(e){return null;}}
+function inmSave(){try{localStorage.setItem(INMET_CK,JSON.stringify({hoje:INM.hoje,futuro:INM.futuro,ts:INM.ts,day:INM.day,src:INM.src,city:Object.fromEntries(Object.entries(INM.city).map(([k,v])=>[k,{prev:v.prev,obs:v.obs,ts:v.ts,day:v.day,ok:v.ok}]))}));}catch(e){}}
+(function inmRestore(){try{const c=JSON.parse(localStorage.getItem(INMET_CK)||'null');if(c&&Array.isArray(c.hoje)){Object.assign(INM,{hoje:c.hoje,futuro:c.futuro||[],ts:c.ts||0,day:c.day||'',src:'cache',city:c.city||{}});INM.status=INM.day===dayKey()?'ok':'stale';}}catch(e){}})();
+let inmBusy=null;
+function loadAvisos(force){
+ if(inmBusy)return inmBusy;
+ const stale=!INM.ts||INM.day!==dayKey()||Date.now()-INM.ts>INMET_TTL;
+ if(!force&&!stale)return Promise.resolve();
+ INM.status='loading';inmUI();
+ inmBusy=(async()=>{
+  try{const r=await inmetJSON('avisos/ativos');const p=parseAvisos(r.j);Object.assign(INM,p,{ts:Date.now(),day:dayKey(),src:r.src,err:'',status:'ok'});}
+  catch(e){INM.err=e.message;INM.status=INM.ts?'stale':'erro';}
+  inmSave();inmBusy=null;onInmet();})();
+ return inmBusy;}
+/* dados do tempo da cidade: previsão do INMET + estação automática mais próxima */
+function findObj(o,keys,d=0){if(!o||typeof o!=='object'||d>4)return null;if(!Array.isArray(o)&&keys.some(k=>k in o))return o;for(const v of Object.values(o)){const r=findObj(v,keys,d+1);if(r)return r;}return null;}
+function parsePrev(j,g){
+ const root=j&&(j[g]||(typeof j==='object'&&Object.values(j).find(v=>v&&typeof v==='object')));if(!root)return null;
+ const days=Object.keys(root).filter(k=>/^\d{2}\/\d{2}\/\d{4}$/.test(k)).sort((a,b)=>idate(a)-idate(b));
+ const L=days.map(k=>{const v=root[k]||{};const per=['manha','tarde','noite'].filter(p=>v[p]&&typeof v[p]==='object').map(p=>Object.assign({p},v[p]));const B=per.length?per:[v];
+  const ns=f=>B.map(b=>num(b[f])).filter(x=>x!=null);const mx=ns('temp_max'),mn=ns('temp_min');
+  const main=per.find(b=>b.p==='tarde')||B[0];
+  return {d:k,dia:txt(main.dia_semana),max:mx.length?Math.max(...mx):null,min:mn.length?Math.min(...mn):null,resumo:txt(main.resumo||main.tempo)};});
+ return L.length?L:null;}
+function parseObs(j){
+ const d=findObj(j,['TEM_INS','TEM_MAX','UMD_INS','VEN_VEL']);if(!d)return null;const st=findObj(j,['DC_NOME','CD_ESTACAO'])||{};
+ let ts=null;const m=String(d.DT_MEDICAO||'').match(/(\d{4})-(\d{2})-(\d{2})/);
+ if(m){const hr=String(d.HR_MEDICAO||'0000').replace(/\D/g,'').padStart(4,'0');ts=Date.UTC(+m[1],m[2]-1,+m[3],+hr.slice(0,2),+hr.slice(2,4));} // INMET publica em UTC
+ return {est:txt(d.DC_NOME||st.DC_NOME),cod:txt(d.CD_ESTACAO||st.CD_ESTACAO),t:num(d.TEM_INS??d.TEM_MAX),u:num(d.UMD_INS??d.UMD_MAX),v:num(d.VEN_VEL),ch:num(d.CHUVA),ts};}
+function loadCity(c,force){
+ const g=GEO[c];if(!g)return;const o=INM.city[c]||(INM.city[c]={});
+ const fresh=o.ok&&o.day===dayKey()&&Date.now()-(o.ts||0)<INMET_TTL;
+ if(o.busy||(!force&&(fresh||(o.tried&&Date.now()-o.tried<10*MIN))))return;
+ o.busy=true;o.tried=Date.now();
+ Promise.allSettled([inmetJSON('previsao/'+g),inmetJSON('estacao/proxima/'+g)]).then(([pv,ob])=>{
+  o.busy=false;
+  const prev=pv.status==='fulfilled'?parsePrev(pv.value.j,g):null,obs=ob.status==='fulfilled'?parseObs(ob.value.j):null;
+  if(prev)o.prev=prev;if(obs)o.obs=obs;
+  o.ok=!!(prev||obs);if(o.ok){o.ts=Date.now();o.day=dayKey();}
+  o.err=o.ok?'':((pv.reason&&pv.reason.message)||'sem resposta');
+  inmSave();
+  if(S.session&&UI.page==='dashboard'&&UI.riskCity===c&&!UI.modal)rerender();});}
+/* quais avisos atingem a cidade: pelo código IBGE e, se faltar, pelo ponto dentro do polígono */
+function inRings(pt,rings){let ins=false;rings.forEach(r=>{for(let i=0,j=r.length-1;i<r.length;j=i++){const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];if((yi>pt[1])!==(yj>pt[1])&&pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi)ins=!ins;}});return ins;}
+function avisosCidade(c){
+ if(INM.day!==dayKey())return [];
+ const g=GEO[c],ct=CITIES.find(k=>k.n===c),now=Date.now();
+ return INM.hoje.filter(a=>(!a.fim||a.fim>now)&&((g&&(a.geo.includes(g)||a.mun.includes(g)))||(ct&&a.bb&&ct.lon>=a.bb[0]&&ct.lon<=a.bb[2]&&ct.lat>=a.bb[1]&&ct.lat<=a.bb[3]&&inRings([ct.lon,ct.lat],a.rings))));}
+function getInm(key){const i=String(key||'').indexOf(':');if(i<0)return null;const g=key.slice(0,i),id=key.slice(i+1);return (g==='hoje'?INM.hoje:INM.futuro).find(a=>a.id===id)||null;}
+function inmStatusTxt(){
+ const t=INM.ts?new Date(INM.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+ if(INM.status==='loading')return 'Atualizando dados do INMET…';
+ if(INM.status==='ok')return 'INMET atualizado às '+t;
+ if(INM.status==='stale')return 'INMET sem resposta · dados de '+fdate(INM.ts)+' '+t;
+ if(INM.status==='erro')return 'INMET indisponível';
+ return 'Conectando ao INMET…';}
+function inmUI(){
+ const s=$('#sync');if(s){const bad=INM.status==='erro'||INM.status==='stale';s.innerHTML='<i class="dot"></i>'+esc(inmStatusTxt());
+  s.style.color=bad?'var(--high)':'';s.style.background=bad?'var(--high-t)':'';
+  s.title=(bad&&INM.err?'Falha ao consultar o INMET ('+INM.err+'). ':'')+'Clique para atualizar agora.';}
+ const m=$('#inm-st');if(m)m.textContent=inmStatusTxt()+(INM.status==='ok'||INM.status==='stale'?' · '+INM.hoje.length+' avisos vigentes, '+INM.futuro.length+' previstos':'');}
+function onInmet(){
+ inmUI();
+ if(!S.session)return;
+ if(UI.page==='dashboard')rerender();
+ else if(UI.page==='mapa'&&GL.edit){
+  if(!UI.map.moved&&UI.map.tool!=='draw'&&GL.edit.map)glFit(GL.edit.map,fitAll(UI.map.layers),true);
+  if(UI.map.selInm&&!getInm(UI.map.selInm))UI.map.selInm=null;
+  drawMap();const ms=$('#map-side');if(ms&&!ms.contains(document.activeElement))renderMapSide();}
+ renderNav();}
+function fitAll(L){
+ let bb=null;
+ S.polys.forEach(p=>{if((p.kind==='prev'&&L.prev)||(p.kind==='alerta'&&L.alerta))bb=unionBB(bb,bboxOf([p.pts]));});
+ if(L.inmHoje)INM.hoje.forEach(a=>{bb=unionBB(bb,a.bb);});
+ if(L.inmFut)INM.futuro.forEach(a=>{bb=unionBB(bb,a.bb);});
+ return bb||SSE_BB;}
+
+/* ============ login ============ */
+let LOGIN_MSG='';
+function loginView(){return `<div class="login">
+ <section class="login-art" aria-hidden="true">
+  <div class="radar"><img src="${LOGO_BIG}" alt="" data-logo><span class="sweep"></span></div>
+  <h2 class="brand-word"><span>Prev</span><b>Clima</b></h2>
+  <p>Tecnologia a serviço da segurança climática</p>
+ </section>
+ <section class="login-form">
+  <div class="lf" id="loginBox">
+   <div class="lock-note">${ico('lock',18)}<span>Acesso restrito a meteorologistas credenciados pela PrevClima</span></div>
+   <h1>Entrar na central</h1>
+   <label for="lg-email">E-mail institucional</label>
+   <input class="field" id="lg-email" type="email" autocomplete="username">
+   <label for="lg-pass">Senha</label>
+   <div class="pw"><input class="field" id="lg-pass" type="password" autocomplete="current-password"><button type="button" data-act="togglePw" aria-label="Mostrar ou ocultar a senha">${ico('eye',20)}</button></div>
+   <div class="err" id="lg-err" role="alert">${esc(LOGIN_MSG)}</div>
+   <button class="btn primary lg" data-act="login">Entrar como profissional</button>
+   <a class="link" target="_blank" rel="noopener" href="${PCE.base}/recuperar-senha.html">Esqueci minha senha</a>
+   <a class="link" target="_blank" rel="noopener" href="${PCE.base}/index.html">Acesso de usuário</a>
+  </div>
+ </section></div>`;}
+
+/* ============ shell ============ */
+const NAV=[{p:'dashboard',n:'Painel',i:'dash'},{p:'alertas',n:'Alertas',i:'bell',b:'al'},{p:'mapa',n:'Mapa e previsão',i:'map'},{p:'estacoes',n:'Estações INMET',i:'target'},{p:'usuarios',n:'Usuários e equipe',i:'users'}];
+function render(){
+ if(!S.session){if(PCE.base===location.origin){location.replace('/index.html');return;}root.innerHTML=loginView();return;}
+ renderShell();
+}
+function renderShell(){
+ root.innerHTML=`<div class="app">
+  <div class="scrim" data-act="toggleSide"></div>
+  <aside class="side" aria-label="Menu principal">
+   <div class="brand"><img src="${LOGO_SMALL}" alt="" width="44" height="44" data-logo><div><div class="wordmark"><span>Prev</span><b>Clima</b></div><small>Central meteorológica</small></div></div>
+   <nav id="nav" aria-label="Seções"></nav>
+   <div class="side-foot">
+    <div class="me"><span class="avatar">${initials(ME().nome)}</span><div><strong>${esc(ME().nome)}</strong><small>${esc(ME().funcao)}</small></div></div>
+    <div class="side-tools">
+     <button class="icon-btn" data-act="theme" aria-label="Tema" title="Tema">${ico('moon')}</button>
+     <button class="icon-btn" data-act="reset" aria-label="Recarregar os dados do servidor" title="Recarregar os dados do servidor">${ico('refresh')}</button>
+     <a class="icon-btn" target="_blank" rel="noopener" href="${PCE.base}/inicio.html" aria-label="Abrir site público" title="Abrir site público">${ico('map')}</a>
+     <button class="icon-btn" data-act="logout" aria-label="Sair" title="Sair">${ico('out')}</button>
+    </div>
+   </div>
+  </aside>
+  <div class="main">
+   <header class="top">
+    <button class="icon-btn menu-btn" data-act="toggleSide" aria-label="Abrir menu">${ico('menu')}</button>
+    <div class="ttl"><h1 id="page-title"></h1><p id="page-sub"></p></div>
+    <span class="sync" id="sync" data-act="inmetRefresh" role="button" tabindex="0"><i class="dot"></i>App sincronizado</span>
+   </header>
+   <main id="page"></main>
+  </div></div>`;
+ renderPage();inmUI();
+}
+const META={
+ dashboard:()=>[saud()+', '+ME().nome.split(' ')[0],'Situação atual das regiões monitoradas'],
+ alertas:()=>['Alertas','Avisos oficiais do INMET e comunicados da equipe'],
+ mapa:()=>['Mapa e previsão','Emita previsões e alertas desenhando a área no mapa'],
+ estacoes:()=>['Estações INMET','Consulte as observações e importe o histórico BDMEP'],
+ usuarios:()=>['Usuários e equipe','Credencie meteorologistas e gerencie as contas ativas']
+};
+function saud(){const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';}
+const VIEWS={};
+function renderPage(){
+ const [t,s]=META[UI.page]();
+ $('#page-title').textContent=t;$('#page-sub').textContent=s;
+ $('#page').innerHTML=VIEWS[UI.page]();
+ if(UI.page==='mapa')initMap();
+ if(UI.page==='dashboard')mountDash();
+ if(UI.page==='estacoes')mountStations();
+ if(UI.page==='usuarios'&&!UI.usersLoaded)loadAccounts();
+ renderNav();
+}
+function renderNav(){
+ const nA=activeAlerts().length;
+ $('#nav').innerHTML=NAV.map(n=>{const b=n.b==='al'?nA:0;return `<button class="nav-i${UI.page===n.p?' on':''}" data-act="go" data-p="${n.p}" ${UI.page===n.p?'aria-current="page"':''}>${ico(n.i,20)}<span>${n.n}</span>${b?`<span class="bdg">${b}</span>`:''}</button>`;}).join('');
+}
+function rerender(){
+ const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;
+ renderPage();
+ if(id){const n=document.getElementById(id);if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}}
+}
+
+/* ============ mapa: MapTiler OMT (OpenStreetMap, esquema OpenMapTiles) via MapLibre GL ============ */
+/* Chave do MapTiler: o Python injeta no bloco #maptiler-key (veja prevclima_site.py) ou cole abaixo.
+   Sem chave, o mapa usa o OpenFreeMap, que serve os mesmos dados do OSM no mesmo esquema OpenMapTiles. */
+const MAPTILER_KEY_PADRAO='';
+const MT_KEY=(()=>{let s='';try{const el=document.getElementById('maptiler-key');s=el?el.textContent.trim():'';}catch(e){}
+ if(!s||s.indexOf('__MAPTILER_'+'KEY__')>=0)s=String(window.PREVCLIMA_MAPTILER_KEY||MAPTILER_KEY_PADRAO||'').trim();return s;})();
+const MT_STYLE='https://api.maptiler.com/maps/openstreetmap/style.json';   // "MapTiler OMT", o mesmo do openstreetmap.org
+const FREE_STYLE='https://tiles.openfreemap.org/styles/liberty';
+const GL_CDN='https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/';
+const SSE_BB=[-54.6,-27.8,-44.6,-21.8];      // Sul/Sudeste, quando não há nada no mapa
+const isDark=()=>{const t=document.documentElement.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);};
+let styleSrc=MT_KEY?'mt':'free',GLP=null;
+const GL={dash:null,edit:null};
+function glReady(){
+ if(window.maplibregl)return Promise.resolve();
+ return GLP||(GLP=new Promise((res,rej)=>{const l=document.createElement('link');l.rel='stylesheet';l.href=GL_CDN+'maplibre-gl.css';document.head.appendChild(l);
+  const s=document.createElement('script');s.src=GL_CDN+'maplibre-gl.js';s.onload=()=>window.maplibregl?res():rej(new Error('MapLibre'));s.onerror=()=>{GLP=null;rej(new Error('MapLibre não carregou'));};document.head.appendChild(s);}));}
+/* --- modo escuro: recolore o próprio estilo OMT (que só existe em versão clara) --- */
+function rgb2hsl(r,g,b){const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0;const l=(mx+mn)/2;if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h/=6;}return [h,s,l];}
+function hsl2rgb(h,s,l){if(!s)return [l*255,l*255,l*255];const f=(p,q,t)=>{t<0&&(t+=1);t>1&&(t-=1);return t<1/6?p+(q-p)*6*t:t<1/2?q:t<2/3?p+(q-p)*(2/3-t)*6:p;};const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;return [f(p,q,h+1/3)*255,f(p,q,h)*255,f(p,q,h-1/3)*255];}
+function parseColor(s){
+ s=String(s).trim().toLowerCase();let m;
+ if((m=s.match(/^#([0-9a-f]{3,8})$/))){let h=m[1];if(h.length<=4)h=h.split('').map(c=>c+c).join('');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16),h.length===8?parseInt(h.slice(6,8),16)/255:1];}
+ if((m=s.match(/^rgba?\(([^)]+)\)$/))){const p=m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);return p.length>=3?[p[0],p[1],p[2],p[3]==null?1:p[3]]:null;}
+ if((m=s.match(/^hsla?\(([^)]+)\)$/))){const p=m[1].replace(/%|deg/g,'').split(/[\s,\/]+/).filter(Boolean).map(parseFloat);if(p.length<3)return null;const c=hsl2rgb(p[0]/360,p[1]/100,p[2]/100);return [c[0],c[1],c[2],p[3]==null?1:p[3]];}
+ return s==='white'?[255,255,255,1]:s==='black'?[0,0,0,1]:null;}
+function darkColor(str){const c=parseColor(str);if(!c)return str;
+ let [h,s,l]=rgb2hsl(c[0]/255,c[1]/255,c[2]/255);l=.07+(1-l)*.8;s*=.72;
+ const r=hsl2rgb(h,s,l),N=[10,23,52];return `rgba(${Math.round(r[0]*.82+N[0]*.18)},${Math.round(r[1]*.82+N[1]*.18)},${Math.round(r[2]*.82+N[2]*.18)},${+c[3].toFixed(3)})`;}
+const mapColors=(v,f)=>typeof v==='string'?f(v):Array.isArray(v)?v.map(x=>mapColors(x,f)):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([k,x])=>[k,mapColors(x,f)])):v;
+function darkify(st){(st.layers||[]).forEach(l=>{if(l.paint)Object.keys(l.paint).forEach(k=>{if(/color/.test(k))l.paint[k]=mapColors(l.paint[k],darkColor);});
+ if(l.type==='raster'){l.paint=Object.assign({},l.paint,{'raster-brightness-max':.35,'raster-saturation':-.4});}});return st;}
+const STYLE_CACHE={};
+function baseStyle(){
+ const url=styleSrc==='mt'?MT_STYLE+'?key='+encodeURIComponent(MT_KEY):FREE_STYLE;
+ if(!STYLE_CACHE[url])STYLE_CACHE[url]=fetchJSON(url,20000).catch(e=>{delete STYLE_CACHE[url];throw e;});
+ return STYLE_CACHE[url].then(s=>JSON.parse(JSON.stringify(s)));}
+function applyBase(g){
+ const dark=isDark();g.dark=dark;
+ baseStyle().then(st=>{if(g.dark!==dark)return;g.map.setStyle(dark?darkify(st):st,{diff:false});g.el.parentNode&&g.el.parentNode.classList.remove('map-off');})
+ .catch(e=>{
+  if(styleSrc==='mt'){styleSrc='free';toast('O MapTiler recusou a chave ('+e.message+'). Usando o OpenFreeMap por enquanto.',true);Object.values(GL).forEach(x=>x&&applyBase(x));return;}
+  g.el.parentNode&&g.el.parentNode.setAttribute('data-off','Não foi possível carregar o mapa base ('+e.message+'). As áreas continuam salvas.');});}
+function glTheme(){Object.values(GL).forEach(g=>{if(g&&g.map&&g.dark!==isDark())applyBase(g);});}
+if(window.matchMedia)try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',glTheme);}catch(e){}
+/* --- camadas do PrevClima por cima do mapa --- */
+const PV_FILL={0:'rgba(57,255,20,.30)',1:'rgba(255,225,0,.33)',2:'rgba(255,122,0,.38)',3:'rgba(255,26,26,.42)',4:'rgba(157,28,255,.45)'};
+const PV_LINE={0:'#39ff14',1:'#ffe100',2:'#ff7a00',3:'#ff2a2a',4:'#a63bff'};
+const AL_STYLE={tempestade:['rgba(240,200,0,.70)','#ffe100'],tornado:['rgba(210,20,40,.72)','#ff4257']};
+const SRCS=['pc-inm-f','pc-inm-h','pc-prev','pc-al','pc-home','pc-sel','pc-vtx','pc-draft','pc-dvtx'];
+const FC=f=>({type:'FeatureCollection',features:f});
+const closeR=r=>r.length&&(r[0][0]!==r[r.length-1][0]||r[0][1]!==r[r.length-1][1])?[...r,r[0]]:r;
+function ringsGeom(rings){ /* separa contornos externos e buracos */
+ const polys=[];rings.forEach(r=>{const host=polys.find(p=>inRings(r[0],[p[0]]));if(host)host.push(closeR(r));else polys.push([closeR(r)]);});
+ return polys.length===1?{type:'Polygon',coordinates:polys[0]}:{type:'MultiPolygon',coordinates:polys};}
+const INM_GEO=new WeakMap();
+function inmFeat(a){let g=INM_GEO.get(a);if(!g){g=ringsGeom(a.rings);INM_GEO.set(a,g);}return {type:'Feature',properties:{key:a.grupo+':'+a.id,c:a.cor},geometry:g};}
+function addOverlays(map){
+ const fl=(map.getStyle().layers||[]).find(l=>l.type==='symbol');const below=fl?fl.id:undefined;
+ SRCS.forEach(s=>{if(!map.getSource(s))map.addSource(s,{type:'geojson',data:FC([])});});
+ const add=(l,b)=>{if(!map.getLayer(l.id))map.addLayer(l,b);};
+ add({id:'pc-inm-f-f',type:'fill',source:'pc-inm-f',paint:{'fill-color':['to-color',['get','c']],'fill-opacity':.13}},below);
+ add({id:'pc-inm-f-l',type:'line',source:'pc-inm-f',paint:{'line-color':['to-color',['get','c']],'line-width':1.6,'line-dasharray':[3,2]}},below);
+ add({id:'pc-inm-h-f',type:'fill',source:'pc-inm-h',paint:{'fill-color':['to-color',['get','c']],'fill-opacity':.32}},below);
+ add({id:'pc-inm-h-l',type:'line',source:'pc-inm-h',paint:{'line-color':['to-color',['get','c']],'line-width':1.6}},below);
+ add({id:'pc-prev-f',type:'fill',source:'pc-prev',paint:{'fill-color':['to-color',['get','f']]}},below);
+ add({id:'pc-prev-l',type:'line',source:'pc-prev',paint:{'line-color':['to-color',['get','l']],'line-width':2.2},layout:{'line-join':'round'}},below);
+ add({id:'pc-al-f',type:'fill',source:'pc-al',paint:{'fill-color':['to-color',['get','f']]}},below);
+ add({id:'pc-al-l',type:'line',source:'pc-al',paint:{'line-color':['to-color',['get','l']],'line-width':2.2},layout:{'line-join':'round'}},below);
+ add({id:'pc-home',type:'circle',source:'pc-home',paint:{'circle-radius':6,'circle-color':'#f5b301','circle-stroke-color':'#fff','circle-stroke-width':2}});
+ add({id:'pc-sel-c',type:'line',source:'pc-sel',paint:{'line-color':'#0b1a3a','line-opacity':.55,'line-width':5}});
+ add({id:'pc-sel',type:'line',source:'pc-sel',paint:{'line-color':'#ffffff','line-width':2.5,'line-dasharray':[3,2]}});
+ add({id:'pc-draft-c',type:'line',source:'pc-draft',paint:{'line-color':'#0b1a3a','line-opacity':.55,'line-width':4.5}});
+ add({id:'pc-draft',type:'line',source:'pc-draft',paint:{'line-color':'#ffffff','line-width':2,'line-dasharray':[3,2]}});
+ add({id:'pc-dvtx',type:'circle',source:'pc-dvtx',paint:{'circle-radius':['case',['get','first'],7,4.5],'circle-color':'#f5b301','circle-stroke-color':'#fff','circle-stroke-width':2}});
+ add({id:'pc-vtx',type:'circle',source:'pc-vtx',paint:{'circle-radius':6.5,'circle-color':'#fff','circle-stroke-color':'#1447d4','circle-stroke-width':2.5}});}
+function glSync(kind){
+ const g=GL[kind];if(!g||!g.map||!g.ready)return;const map=g.map,M=UI.map,ed=kind==='edit';
+ const L=ed?M.layers:{prev:true,alerta:true,inmHoje:true,inmFut:false};
+ const set=(s,d)=>{const src=map.getSource(s);if(src)src.setData(d);};
+ const vis=(ids,on)=>ids.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',on?'visible':'none');});
+ set('pc-inm-f',FC(INM.futuro.filter(a=>a.rings.length).map(inmFeat)));
+ set('pc-inm-h',FC(INM.hoje.filter(a=>a.rings.length).map(inmFeat)));
+ set('pc-prev',FC(S.polys.filter(p=>p.kind==='prev'&&p.pts.length>2).sort((a,b)=>a.level-b.level).map(p=>({type:'Feature',properties:{pid:p.id,f:PV_FILL[p.level]||PV_FILL[0],l:PV_LINE[p.level]||PV_LINE[0]},geometry:{type:'Polygon',coordinates:[closeR(p.pts)]}}))));
+ set('pc-al',FC(S.polys.filter(p=>p.kind==='alerta'&&p.pts.length>2).map(p=>{const st=AL_STYLE[p.sub]||AL_STYLE.tempestade;return {type:'Feature',properties:{pid:p.id,f:st[0],l:st[1]},geometry:{type:'Polygon',coordinates:[closeR(p.pts)]}};})));
+ const home=CITIES.find(c=>c.home);set('pc-home',FC(home?[{type:'Feature',properties:{},geometry:{type:'Point',coordinates:[home.lon,home.lat]}}]:[]));
+ const sp=ed&&M.sel&&getPoly(M.sel),si=ed&&!sp&&M.selInm&&getInm(M.selInm);
+ set('pc-sel',FC(sp?[{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:closeR(sp.pts)}}]:si&&si.rings.length?[{type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:si.rings.map(closeR)}}]:[]));
+ set('pc-vtx',FC(sp&&canEdit(sp)&&M.tool==='select'?sp.pts.map((p,i)=>({type:'Feature',properties:{i},geometry:{type:'Point',coordinates:p}})):[]));
+ const dr=ed&&M.tool==='draw'?M.draft:[];
+ set('pc-draft',FC(dr.length?[{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:M.cursor?[...dr,M.cursor]:dr.length>1?dr:[dr[0],dr[0]]}}]:[]));
+ set('pc-dvtx',FC(dr.map((p,i)=>({type:'Feature',properties:{first:i===0},geometry:{type:'Point',coordinates:p}}))));
+ vis(['pc-prev-f','pc-prev-l'],L.prev);vis(['pc-al-f','pc-al-l'],L.alerta);vis(['pc-inm-h-f','pc-inm-h-l'],L.inmHoje);vis(['pc-inm-f-f','pc-inm-f-l'],L.inmFut);}
+function glFit(map,bb,anim){if(!map||!bb)return;map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:28,maxZoom:9,duration:anim?600:0});}
+function glMount(kind,host){
+ if(!host)return;
+ let g=GL[kind];
+ if(g){host.appendChild(g.el);if(g.map){g.map.resize();glSync(kind);g.onMount&&g.onMount();}return g;}
+ g=GL[kind]={el:document.createElement('div'),map:null,ready:false,dark:null};g.el.className='mapgl';host.appendChild(g.el);
+ glReady().then(()=>{
+  const ed=kind==='edit';
+  const map=g.map=new maplibregl.Map({container:g.el,
+   style:{version:8,sources:{},layers:[{id:'bg',type:'background',paint:{'background-color':isDark()?'#071230':'#cfe0f7'}}]},
+   bounds:fitAll(ed?UI.map.layers:{prev:true,alerta:true,inmHoje:true}),fitBoundsOptions:{padding:28,maxZoom:9},
+   interactive:ed,attributionControl:{compact:true},dragRotate:false,pitchWithRotate:false,touchPitch:false,maxPitch:0,
+   transformRequest:url=>(MT_KEY&&/^https:\/\/api\.maptiler\.com\//.test(url)&&!/[?&]key=/.test(url))?{url:url+(url.includes('?')?'&':'?')+'key='+encodeURIComponent(MT_KEY)}:undefined});
+  if(ed&&map.touchZoomRotate)map.touchZoomRotate.disableRotation();
+  map.on('style.load',()=>{addOverlays(map);g.ready=true;glSync(kind);});
+  if(ed)bindEdit(map);
+  applyBase(g);
+  g.onMount&&g.onMount();
+ }).catch(e=>{host.setAttribute('data-off','Não foi possível carregar a biblioteca do mapa ('+e.message+'). Verifique a conexão.');});
+ return g;}
+function bindEdit(map){
+ const M=UI.map;let vd=null;
+ const has=ids=>ids.filter(id=>map.getLayer(id));
+ const pick=pt=>map.queryRenderedFeatures(pt,{layers:has(['pc-vtx','pc-al-f','pc-prev-f','pc-inm-h-f','pc-inm-f-f'])});
+ map.on('movestart',e=>{if(e.originalEvent)M.moved=true;});
+ map.on('mousemove',e=>{
+  const c=$('#coords');if(c)c.textContent=e.lngLat.lat.toFixed(4)+'°, '+e.lngLat.lng.toFixed(4)+'°';
+  const cv=map.getCanvas();
+  if(M.tool==='draw'){cv.style.cursor='crosshair';if(M.draft.length){M.cursor=[e.lngLat.lng,e.lngLat.lat];glSync('edit');}return;}
+  if(vd){const pl=getPoly(M.sel);if(pl){pl.pts[vd.i]=[+e.lngLat.lng.toFixed(5),+e.lngLat.lat.toFixed(5)];vd.moved=true;glSync('edit');}return;}
+  const f=pick(e.point)[0];cv.style.cursor=f?(f.layer.id==='pc-vtx'?'move':'pointer'):'';});
+ const startV=e=>{if(M.tool!=='select')return;const f=e.features&&e.features[0];if(!f)return;e.preventDefault();vd={i:f.properties.i,moved:false};M.busy=true;map.dragPan.disable();};
+ const endV=()=>{if(!vd)return;map.dragPan.enable();M.busy=false;const pl=vd.moved&&getPoly(M.sel);vd=null;if(pl)savePoints(pl);};
+ map.on('mousedown','pc-vtx',startV);map.on('touchstart','pc-vtx',startV);
+ map.on('touchmove',e=>{if(vd){const pl=getPoly(M.sel);if(pl){pl.pts[vd.i]=[+e.lngLat.lng.toFixed(5),+e.lngLat.lat.toFixed(5)];vd.moved=true;glSync('edit');}}});
+ map.on('mouseup',endV);map.on('touchend',endV);
+ map.on('click',e=>{
+  if(M.tool==='draw'){
+   const p=e.point,d=M.draft;
+   if(d.length>=3){const f=map.project(d[0]);if(Math.hypot(f.x-p.x,f.y-p.y)<12){finishDraw();return;}}
+   if(d.length){const l=map.project(d[d.length-1]);if(Math.hypot(l.x-p.x,l.y-p.y)<4)return;}
+   d.push([+e.lngLat.lng.toFixed(5),+e.lngLat.lat.toFixed(5)]);renderMapBar();drawMap();return;}
+  const f=pick(e.point).find(x=>x.layer.id!=='pc-vtx');
+  if(f&&f.properties.pid){M.sel=f.properties.pid;M.selInm=null;}
+  else if(f&&f.properties.key){M.sel=null;M.selInm=f.properties.key;}
+  else if(!pick(e.point).length){if(!M.sel&&!M.selInm)return;M.sel=null;M.selInm=null;}
+  else return;
+  renderMapSide();drawMap();});
+ map.on('dblclick',e=>{if(M.tool==='draw'){e.preventDefault();if(M.draft.length>=3)finishDraw();}});}
+function staticMap(){return `<div class="mapgl-host" id="dash-map" role="img" aria-label="Mapa com as áreas de previsão, os alertas atuais e os avisos do INMET"></div>`;}
+function mountDash(){const h=$('#dash-map');if(!h)return;const g=glMount('dash',h);if(g&&g.map)glFit(g.map,fitAll({prev:true,alerta:true,inmHoje:true}));if(g)g.onMount=()=>{if(g.map)glFit(g.map,fitAll({prev:true,alerta:true,inmHoje:true}));};}
+function legendChips(){return `<div class="legend"><span><i class="lg-t"></i>Tempestades não severas</span><span><i class="lg-1"></i>Nível 1</span><span><i class="lg-2"></i>Nível 2</span><span><i class="lg-3"></i>Nível 3</span><span><i class="lg-4"></i>Nível 4</span>${Object.values(ISEV).map(x=>`<span><i style="background:${x.c}"></i>INMET · ${x.n}</span>`).join('')}</div>`;}
+
+/* ============ VIEW: painel ============ */
+function maxLevel(){const l=S.polys.filter(p=>p.kind==='prev').map(p=>p.level);return l.length?Math.max(...l):null;}
+/* dados reais do INMET para a cidade escolhida no resumo de risco */
+function wxBlock(c){
+ loadCity(c);
+ const o=INM.city[c]||{},ob=o.obs,today=new Date().toLocaleDateString('pt-BR');
+ const pv=o.prev&&(o.prev.find(d=>d.d===today)||o.prev[0]);
+ const f1=v=>v==null?'—':v.toLocaleString('pt-BR',{maximumFractionDigits:1});
+ const hm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+ let h='';
+ if(ob&&(ob.t!=null||ob.u!=null)){
+  const old=ob.ts&&Date.now()-ob.ts>3*HOUR;
+  h+=`<div class="risk-row"><span class="rn">${ico('target',20)}Agora</span><span>${f1(ob.t)} °C · umidade ${f1(ob.u)}% · vento ${ob.v==null?'—':f1(ob.v*3.6)+' km/h'} · chuva ${ob.ch==null?'—':f1(ob.ch)+' mm'}</span></div>
+  <p class="hint" style="margin:-6px 0 4px">Estação INMET ${esc(ob.est||ob.cod||'mais próxima')}${ob.ts?' · medição das '+hm(ob.ts)+(old?' de '+fdate(ob.ts)+' (sem leitura recente)':''):''}</p>`;}
+ if(pv)h+=`<div class="risk-row"><span class="rn">${ico('clock',20)}Previsão ${pv.d===today?'hoje':pv.d.slice(0,5)}</span><span>${pv.max!=null?'Máx '+f1(pv.max)+'°':''}${pv.min!=null?' · Mín '+f1(pv.min)+'°':''}${pv.resumo?' · '+esc(pv.resumo):''}</span></div>`;
+ if(!h)h=`<p class="hint" style="padding:8px 0">${o.busy?'Buscando previsão e estação do INMET…':'Previsão e estação do INMET indisponíveis agora.'}</p>`;
+ const L=avisosCidade(c);
+ h+=L.length?`<div class="row" style="gap:6px;margin:8px 0 2px">${L.map(a=>{const si=sevInfo(a.sev);return `<span class="pill ${si.t}" title="${esc(fmtPer(a))}"><i class="dot"></i>INMET: ${esc(a.ev)} · ${esc(si.n)}</span>`;}).join('')}</div>`
+  :INM.day===dayKey()?`<p class="hint" style="margin-top:6px">Nenhum aviso do INMET vigente para ${esc(c)}.</p>`:'';
+ return h;}
+function obsPanel(){
+ const c=UI.riskCity;
+ return `<section class="panel"><div class="panel-h"><h2>Observações</h2>
+  <select class="field" style="height:38px;width:auto" data-b="riskCity" aria-label="Cidade">${CIDADES_RISCO.map(x=>`<option${x===c?' selected':''}>${x}</option>`).join('')}</select></div>
+  <div class="panel-b">${wxBlock(c)}</div></section>`;
+}
+function attentionPanel(){
+ const now=Date.now(),L=[...INM.hoje,...INM.futuro].filter(a=>(!a.fim||a.fim>now)&&(!a.ini||a.ini<now+24*HOUR)).slice(0,5);
+ return `<section class="panel"><div class="panel-h"><h2>Atenção nas próximas horas</h2></div><div class="panel-b">${L.length?`<div class="plist">${L.map(a=>`<button class="pl" data-act="openInm" data-id="${esc(a.grupo+':'+a.id)}"><i style="background:${a.cor}"></i><span>${esc(a.ev)} · ${esc(sevInfo(a.sev).n)}${a.estados?' — '+esc(a.estados.length>40?a.estados.slice(0,38)+'…':a.estados):''}</span></button>`).join('')}</div>`:`<p class="hint">${INM.status==='loading'?'Carregando avisos do INMET…':INM.status==='erro'?'Não foi possível falar com o INMET.':'Nenhum aviso do INMET para as próximas horas.'}</p>`}</div></section>`;
+}
+VIEWS.dashboard=()=>{
+ const act=activeAlerts(),ml=maxLevel();
+ return `<section class="panel kpis" aria-label="Indicadores">
+  <div class="kpi"><span class="kpi-n" style="color:${act.length?'var(--crit)':'var(--ok)'}">${act.length}</span><span class="kpi-l">alertas ativos</span></div>
+  <div class="kpi"><span class="kpi-n">${fmt(INM.hoje.length)}</span><span class="kpi-l">avisos do INMET</span></div>
+  <div class="kpi"><span class="kpi-n">${fmt(S.stations)}</span><span class="kpi-l">estações cadastradas</span></div>
+  <div class="kpi"><span class="kpi-n">${ml===null?'—':ml===0?'T':'Nível '+ml}</span><span class="kpi-l">maior previsão vigente</span></div></section>
+ <div class="dash">
+  <div class="stack">
+   <section class="panel"><div class="panel-h"><h2>Visão do território</h2><button class="btn sm" data-act="go" data-p="mapa">${ico('pen',16)}Abrir mapa e previsão</button></div>
+    <div class="panel-b" style="padding-bottom:0"><div class="mapbox mini">${staticMap()}</div></div>${legendChips()}</section>
+   <section class="panel"><div class="panel-h"><h2>Atividade recente</h2></div><div class="panel-b">${S.log.length?`<ul class="log">${S.log.slice(0,6).map(l=>`<li><i class="lb"></i><span>${esc(l.txt)}</span><time>${ago(l.ts)}</time></li>`).join('')}</ul>`:'<p class="hint">Nenhuma atividade registrada ainda.</p>'}</div></section>
+  </div>
+  <div class="stack">
+   ${attentionPanel()}
+   ${obsPanel()}
+  </div>
+ </div>`;
+};
+
+/* ============ VIEW: alertas ============ */
+function alertCard(a){
+ const T=TIPOS[a.tipo],on=isActive(a),open=UI.open.has(a.id);
+ return `<article class="al sev-${a.sev}${on?'':' off'}">
+  <button class="al-head" data-act="toggleAl" data-id="${a.id}" aria-expanded="${open}">
+   <span class="al-ic">${ico(T.i,22)}</span>
+   <span class="al-main"><span class="al-sev">${on?'Ativo<i class="dot"></i>':'Expirado'}</span><strong>${esc(T.nome)}</strong><span class="al-loc">${ico('pin',13)}${esc(a.regiao)}</span></span>
+   <span class="al-side"><span>${ago(a.criado)}</span>${ico(open?'up':'down',16)}</span>
+  </button>
+  ${open?`<div class="al-body"><p class="txt">${esc(a.texto)}</p>
+   <div class="recs"><h4>Como se proteger</h4><ul>${a.recs.map(r=>`<li>${ico('check',15)}<span>${esc(r)}</span></li>`).join('')}</ul></div>
+   <div class="al-foot"><span>${ico('clock',14)} ${restante(a)}</span><span>por ${esc(a.por||'—')}</span></div>
+   ${on&&a.pts.length?`<div class="al-acts"><button class="btn sm" data-act="viewAlertMap" data-id="${a.id}">${ico('map',15)}Ver no mapa</button></div>`:''}</div>`:''}
+ </article>`;
+}
+function matchQ(t){const q=UI.alertQ.trim().toLowerCase();return !q||t.toLowerCase().includes(q);}
+function alertsFiltered(){
+ let L=[...S.alerts].sort((a,b)=>b.criado-a.criado);
+ if(UI.alertF==='ativos')L=L.filter(isActive);
+ return L.filter(a=>matchQ(a.titulo+' '+a.regiao));
+}
+VIEWS.alertas=()=>{
+ const L=alertsFiltered(),now=Date.now();
+ const IL=INM.hoje.filter(a=>(!a.fim||a.fim>now)&&matchQ(a.ev+' '+a.estados+' '+a.areas));
+ return `<div class="toolbar">
+  <div class="tabs" role="tablist">
+   <button class="tab${UI.alertF==='todos'?' on':''}" data-act="alF" data-f="todos">Todos<i>${S.alerts.length}</i></button>
+   <button class="tab${UI.alertF==='ativos'?' on':''}" data-act="alF" data-f="ativos">Ativos<i>${activeAlerts().length}</i></button>
+  </div>
+  <div class="search"><span class="sr">Buscar alertas</span>${ico('search',17)}<input class="field" id="alQ" data-b="alQ" placeholder="Buscar por título ou região" value="${esc(UI.alertQ)}"></div>
+  <span class="grow"></span>
+  <button class="btn primary" data-act="goEmit">${ico('plus',18)}Emitir Alerta</button>
+ </div>
+ <section class="panel" style="margin-bottom:16px"><div class="panel-h"><h2>Comunicados da equipe</h2></div><div class="panel-b">${L.length?`<div class="alist">${L.map(a=>alertCard(a)).join('')}</div>`:'<p class="hint">Nenhum comunicado encontrado.</p>'}</div></section>
+ <section class="panel"><div class="panel-h"><h2>Avisos oficiais · INMET</h2></div><div class="panel-b">${IL.length?`<div class="plist">${IL.map(a=>`<button class="pl" data-act="openInm" data-id="${esc(a.grupo+':'+a.id)}"><i style="background:${a.cor}"></i><span>${esc(a.ev)} · ${esc(sevInfo(a.sev).n)} · ${esc(fmtPer(a))}</span></button>`).join('')}</div>`:`<p class="hint">${INM.status==='erro'?'Não foi possível falar com o INMET.':'Nenhum aviso oficial encontrado.'}</p>`}</div></section>`;
+};
+
+/* ---- modais de emissão ---- */
+const pad2=n=>String(n).padStart(2,'0');
+const toLocalInput=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes());};
+const fromLocalInput=v=>{const t=new Date(v).getTime();return isNaN(t)?null:new Date(t).toISOString();};
+const BLANK='Todas as informações devem estar preenchidas';
+function alertModal(){
+ const f=UI.form;
+ return `<div class="modal-back" data-back="1"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="mh"><h2 id="mt">Emitir Alerta</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ico('x')}</button></div>
+  <div class="mb">
+   <div class="fl"><span class="lbl">Tipo</span><div class="seg" role="group" aria-label="Tipo de alerta">${[['tempestade','mod','Tempestade Severa'],['tornado','crit','Tornado']].map(([k,t,n])=>`<button class="${f.tipo===k?'on t-'+t:''}" data-act="setAlertType" data-v="${k}" aria-pressed="${f.tipo===k}">${n}</button>`).join('')}</div></div>
+   <div class="fl"><label for="f-fim">Data de vencimento</label><input class="field" id="f-fim" type="datetime-local" data-f="form.fim" value="${esc(f.fim)}"></div>
+   <div class="fl"><label for="f-texto">Breve descrição do perigo</label><textarea class="field" id="f-texto" maxlength="500" data-f="form.texto">${esc(f.texto)}</textarea></div>
+   <p class="hint">Área desenhada no mapa com ${f.pts.length} pontos. As instruções de proteção são pré-definidas. Depois de emitido, o alerta não pode ser editado nem excluído.</p>
+   <div class="err" id="f-err" role="alert"></div></div>
+  <div class="mf"><button class="btn" data-act="closeModal">Cancelar</button><button class="btn primary" data-act="publishAlert">${ico('send',16)}Emitir</button></div>
+ </div></div>`;
+}
+function forecastModal(){
+ const f=UI.form;
+ if(f.confirm)return `<div class="modal-back" data-back="1"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mt">
+  <div class="mh"><h2 id="mt">Confira as informações</h2></div>
+  <div class="mb"><ul class="log"><li><span><strong>Nível:</strong> ${esc(LNAME[f.level])}</span></li><li><span><strong>Emissão:</strong> ${fdh(new Date(f.ini).getTime())}</span></li><li><span><strong>Vencimento:</strong> ${fdh(new Date(f.fim).getTime())}</span></li><li><span><strong>Descrição:</strong> ${esc(f.texto)}</span></li><li><span><strong>Área:</strong> ${f.pts.length} pontos no mapa</span></li></ul>
+  <p class="hint" style="margin-top:12px">As informações só poderão ser alteradas nos 30 minutos seguintes à emissão</p></div>
+  <div class="mf"><button class="btn" data-act="backForecast">Voltar</button><button class="btn primary" data-act="saveForecast">${ico('check',16)}Tudo certo</button></div></div></div>`;
+ return `<div class="modal-back" data-back="1"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="mh"><h2 id="mt">${f.edit?'Editar previsão':'Emitir previsão'}</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ico('x')}</button></div>
+  <div class="mb">
+   <div class="fl"><span class="lbl">Nível</span><div class="seg" role="group" aria-label="Nível">${[0,1,2,3,4].map(l=>`<button class="${f.level===l?'on t-pri':''}" data-act="setLevel" data-l="${l}" aria-pressed="${f.level===l}">${l===0?'T':l}</button>`).join('')}</div></div>
+   <div class="two-f"><div class="fl"><label for="f-ini">Data de emissão</label><input class="field" id="f-ini" type="datetime-local" data-f="form.ini" value="${esc(f.ini)}"></div>
+   <div class="fl"><label for="f-fim">Data de vencimento</label><input class="field" id="f-fim" type="datetime-local" data-f="form.fim" value="${esc(f.fim)}"></div></div>
+   <div class="fl"><label for="f-texto">Descrição</label><textarea class="field" id="f-texto" maxlength="500" data-f="form.texto">${esc(f.texto)}</textarea></div>
+   <p class="hint">Área desenhada no mapa com ${f.pts.length} pontos.${f.edit?' Arraste os pontos brancos no mapa para ajustar o contorno.':''}</p>
+   <div class="err" id="f-err" role="alert"></div></div>
+  <div class="mf"><button class="btn" data-act="closeModal">Cancelar</button><button class="btn primary" data-act="${f.edit?'saveForecast':'reviewForecast'}">${ico('send',16)}${f.edit?'Salvar':'Emitir'}</button></div>
+ </div></div>`;
+}
+function accountModal(){
+ const a=UI.account;
+ return `<div class="modal-back" data-back="1"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="mh"><h2 id="mt">Editar usuário</h2><button class="icon-btn" data-act="closeModal" aria-label="Fechar">${ico('x')}</button></div>
+  <div class="mb"><div class="fl"><label for="a-nome">Nome</label><input class="field" id="a-nome" data-f="account.nome" value="${esc(a.nome)}"></div>
+  <div class="fl"><label for="a-email">E-mail</label><input class="field" id="a-email" type="email" data-f="account.email" value="${esc(a.email)}"></div>
+  <div class="err" id="a-err" role="alert"></div></div>
+  <div class="mf"><button class="btn" data-act="closeModal">Cancelar</button><button class="btn primary" data-act="saveAccount">Salvar</button></div></div></div>`;
+}
+function renderModal(){
+ const m=UI.modal,mr=$('#modal-root');
+ if(!m){mr.innerHTML='';document.body.style.overflow='';return;}
+ document.body.style.overflow='hidden';
+ if(m.type==='alert')mr.innerHTML=alertModal();
+ else if(m.type==='forecast')mr.innerHTML=forecastModal();
+ else if(m.type==='account')mr.innerHTML=accountModal();
+ else if(m.type==='confirm')mr.innerHTML=`<div class="modal-back" data-back="1"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mt"><div class="mh"><h2 id="mt">${esc(m.title)}</h2></div><div class="mb"><p>${esc(m.msg)}</p></div><div class="mf"><button class="btn" data-act="closeModal">Cancelar</button><button class="btn ${m.danger?'solid-danger':'primary'}" data-act="confirmOk">${esc(m.ok)}</button></div></div></div>`;
+ const f=$('#modal-root [autofocus],#modal-root .field');if(f)setTimeout(()=>f.focus&&f.focus(),30);
+}
+function ask(o){UI.modal={type:'confirm',ok:'Confirmar',danger:false,...o};renderModal();}
+
+/* ============ VIEW: mapa ============ */
+VIEWS.mapa=()=>`<div class="map-page">
+ <div><div class="map-bar" id="map-bar"></div>
+  <div class="mapbox" id="mapbox"><div class="mapgl-host" id="map-host" role="application" aria-label="Editor do mapa"></div><div class="coords" id="coords">Passe o mouse sobre o mapa</div><div class="map-hint" id="map-hint" hidden></div></div></div>
+ <aside class="map-side" id="map-side" aria-label="Painel do mapa"></aside></div>`;
+function renderMapBar(){
+ const M=UI.map,d=M.tool==='draw';
+ $('#map-bar').innerHTML=(d?`<button class="btn primary" data-act="finishDraw" ${M.draft.length<3?'disabled':''}>${ico('check',16)}Concluir área</button><button class="btn" data-act="undoPt" ${M.draft.length?'':'disabled'}>${ico('undo',16)}Desfazer ponto</button><button class="btn danger" data-act="cancelDraw">${ico('x',16)}Cancelar</button>`
+  :`<button class="btn ${M.tool==='select'?'on':''}" data-act="mapTool" data-t="select">${ico('pointer',16)}Selecionar</button><button class="btn primary" data-act="startDraw" data-k="prev">${ico('pen',16)}Emitir previsão</button><button class="btn" data-act="startDraw" data-k="alerta">${ico('alert',16)}Emitir Alerta</button>`)
+  +`<span class="sp"></span><button class="icon-btn" data-act="zoomIn" aria-label="Aproximar">${ico('zoomin')}</button><button class="icon-btn" data-act="zoomOut" aria-label="Afastar">${ico('zoomout')}</button><button class="icon-btn" data-act="zoomReset" aria-label="Recentralizar">${ico('target')}</button>`;
+}
+function polyListRows(){
+ const L=[...S.polys].sort((a,b)=>(a.kind===b.kind?0:a.kind==='prev'?-1:1)||(a.level||0)-(b.level||0));
+ return L.map(p=>{const col=p.kind==='prev'?LCOL[p.level]:p.sub==='tornado'?'#ff2a2a':'#ffd600';return `<button class="pl${UI.map.sel===p.id?' on':''}" data-act="selPoly" data-id="${p.id}"><i style="background:${col}"></i><span>${esc(p.nome)}</span></button>`;}).join('');
+}
+function renderMapSide(){
+ const M=UI.map,p=M.sel&&getPoly(M.sel);let ctx='';
+ if(M.tool==='draw'){
+  ctx=`<section class="panel"><div class="panel-h"><h2>${M.drawKind==='prev'?'Emitir previsão':'Emitir Alerta'}</h2></div><div class="panel-b">
+   <p class="hint">Desenhe a área: clique no mapa para marcar cada vértice. Para concluir, dê dois cliques, clique no primeiro ponto ou use o botão “Concluir área”. Em seguida preencha as informações.</p></div></section>`;
+ }else if(p){
+  const ed=canEdit(p);
+  ctx=`<section class="panel"><div class="panel-h"><h2>${p.kind==='prev'?'Previsão':'Alerta'} selecionado</h2><button class="icon-btn" data-act="deselect" aria-label="Limpar seleção">${ico('x',16)}</button></div><div class="panel-b">
+   <strong style="display:block;font-size:16px">${esc(p.nome)}</strong>
+   <p style="font-size:14px;margin:6px 0">${esc(p.texto)}</p>
+   <p class="hint">${p.kind==='prev'?'Emitida em '+fdh(p.ini)+' · ':''}Válido até ${fdh(p.fim)} · por ${esc(p.por)}</p>
+   ${p.kind==='prev'?(ed?`<div class="row" style="gap:8px;margin-top:10px"><button class="btn sm" data-act="editForecast">${ico('pencil',15)}Editar</button><button class="btn sm danger" data-act="delForecast">${ico('trash',15)}Excluir previsão</button></div><p class="hint" style="margin-top:10px">Pode ser alterada até ${fdh(p.editaAte)}.</p>`:'<p class="hint" style="margin-top:10px">Passaram-se 30 minutos desde a emissão: esta previsão não pode mais ser alterada.</p>'):'<p class="hint" style="margin-top:10px">Alertas não podem ser editados nem excluídos.</p>'}</div></section>`;
+ }else if(M.selInm&&getInm(M.selInm)){
+  ctx=inmDetail(getInm(M.selInm));
+ }else{
+  const IL=[...INM.hoje,...INM.futuro];
+  ctx=`<section class="panel"><div class="panel-h"><h2>Previsões e alertas vigentes</h2></div><div class="panel-b"><p class="hint" style="margin-bottom:10px">Clique numa área no mapa ou escolha aqui para ver os detalhes.</p><div class="plist">${polyListRows()||'<p class="hint">Nenhuma previsão ou alerta vigente.</p>'}</div>
+   <p class="hint" style="margin:14px 0 8px">Avisos oficiais · INMET (${IL.length})</p>
+   <div class="plist">${IL.length?IL.map(a=>{const k=a.grupo+':'+a.id;return `<button class="pl" data-act="selInm" data-id="${esc(k)}"><i style="background:${a.cor}"></i><span>${esc(a.ev)} · ${esc(sevInfo(a.sev).n)}${a.grupo==='futuro'?' · previsto '+(a.ini?fdh(a.ini).slice(0,5):''):''}${a.estados?' — '+esc(a.estados.length>40?a.estados.slice(0,38)+'…':a.estados):''}</span></button>`;}).join(''):`<p class="hint">${INM.status==='loading'?'Carregando avisos do INMET…':INM.status==='erro'?'Não foi possível falar com o INMET.':'Nenhum aviso do INMET no momento.'}</p>`}</div></div></section>`;
+ }
+ $('#map-side').innerHTML=ctx+`<section class="panel"><div class="panel-h"><h2>Mostrar</h2></div><div class="panel-b" style="display:flex;flex-direction:column;gap:8px">
+  <label class="chk"><input type="checkbox" data-layer="prev" ${M.layers.prev?'checked':''}>Previsão de tempo severo</label>
+  <label class="chk"><input type="checkbox" data-layer="alerta" ${M.layers.alerta?'checked':''}>Alertas de tempo severo</label>
+  <label class="chk"><input type="checkbox" data-layer="inmHoje" ${M.layers.inmHoje?'checked':''}>Avisos do INMET vigentes hoje</label>
+  <label class="chk"><input type="checkbox" data-layer="inmFut" ${M.layers.inmFut?'checked':''}>Avisos do INMET para os próximos dias</label>
+  <p class="hint" id="inm-st"></p>
+  <button class="btn sm" style="align-self:flex-start" data-act="inmetRefresh">${ico('refresh',15)}Atualizar dados do INMET</button></div></section>
+  <section class="panel"><div class="panel-h"><h2>Legenda</h2></div><div class="panel-b"><div class="legend-list">
+  <div><i class="ans"></i>Alerta de tempestade severa</div><div><i class="atn"></i>Alerta de tornado</div>
+  ${[0,1,2,3,4].map(l=>`<div><i style="background:${LCOL[l]}"></i>Previsão ${l===0?'de tempestades não severas':'de nível '+l}</div>`).join('')}
+  ${Object.values(ISEV).map(x=>`<div><i style="background:${x.c}"></i>Aviso INMET · ${x.n}</div>`).join('')}
+  <div><i style="background:transparent;border:2px dashed var(--muted)"></i>Contorno tracejado: aviso INMET previsto</div></div></div></section>`;
+ inmUI();
+}
+function inmDetail(a){
+ const si=sevInfo(a.sev);
+ const ul=(t,L)=>L.length?`<span class="lbl" style="display:block;font-weight:700;font-size:13.5px;margin-top:10px">${t}</span><ul class="log">${L.map(r=>`<li><i class="lb" style="background:${a.cor}"></i><span>${esc(r)}</span></li>`).join('')}</ul>`:'';
+ return `<section class="panel"><div class="panel-h"><h2>Aviso do INMET</h2><button class="icon-btn" data-act="deselect" aria-label="Limpar seleção">${ico('x',16)}</button></div><div class="panel-b">
+  <div class="row" style="gap:8px;margin-bottom:8px"><span class="pill ${si.t}"><i class="dot"></i>${esc(si.n)}</span><span class="pill">${a.grupo==='hoje'?'Vigente hoje':'Próximos dias'}</span></div>
+  <strong style="display:block;font-size:16px">${esc(a.ev)}</strong>
+  <p class="hint" style="margin:4px 0 6px">${ico('clock',14)} ${esc(fmtPer(a))}</p>
+  ${a.desc?`<p style="font-size:14px">${esc(a.desc)}</p>`:''}
+  ${ul('Riscos',a.riscos)}${ul('Instruções',a.instr)}
+  ${a.estados?`<p class="hint" style="margin-top:8px">Estados: ${esc(a.estados)}</p>`:''}
+  ${a.nmun?`<p class="hint">${fmt(a.nmun)} municípios na área do aviso</p>`:''}
+  ${a.rings.length?'':`<p class="hint">O INMET não enviou o contorno deste aviso.</p>`}
+  <div class="row" style="gap:8px;margin-top:12px"><a class="btn sm" href="https://avisos.inmet.gov.br/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${ico('info',15)}Ver no site do INMET</a></div>
+  <p class="hint" style="margin-top:10px">Área oficial do INMET: somente leitura, atualizada automaticamente.</p></div></section>`;}
+function setHint(){const h=$('#map-hint'),M=UI.map;if(!h)return;
+ if(M.tool==='draw'){h.hidden=false;h.textContent=M.draft.length<3?'Clique no mapa para marcar os pontos ('+M.draft.length+' de 3 no mínimo)':'Dê dois cliques ou clique no primeiro ponto para concluir';}else h.hidden=true;}
+function drawMap(){
+ const M=UI.map;const g=GL.edit;
+ if(g&&g.map){if(M.tool==='draw')g.map.doubleClickZoom.disable();else g.map.doubleClickZoom.enable();}
+ glSync('edit');setHint();
+}
+function initMap(){
+ const M=UI.map;
+ renderMapBar();renderMapSide();
+ const g=glMount('edit',$('#map-host'));
+ if(g)g.onMount=()=>{const map=g.map;if(!map)return;
+  if(M.focus){glFit(map,M.focus);M.focus=null;M.moved=true;}
+  else if(!M.moved)glFit(map,fitAll(M.layers));
+  drawMap();};
+ if(g&&g.map)g.onMount();
+ setHint();
+}
+function finishDraw(){
+ const M=UI.map;if(M.draft.length<3){toast('Marque pelo menos 3 pontos para fechar a área.',true);return;}
+ const pts=M.draft.slice();
+ UI.form=M.drawKind==='prev'?{level:2,ini:toLocalInput(Date.now()),fim:'',texto:'',pts,edit:false,confirm:false}:{tipo:'tempestade',fim:'',texto:'',pts};
+ UI.modal={type:M.drawKind==='prev'?'forecast':'alert'};renderModal();
+}
+function forecastBody(f){return {level:f.level,issued_at:fromLocalInput(f.ini),valid_until:fromLocalInput(f.fim),description:f.texto.trim(),points:f.pts};}
+function endDraw(){const M=UI.map;M.draft=[];M.cursor=null;M.tool='select';}
+/* grava o contorno depois de arrastar um vértice (dentro dos 30 minutos) */
+async function savePoints(p){await run(()=>api('/panel/forecasts/'+p.fid,{method:'PATCH',body:{level:p.level,issued_at:new Date(p.ini).toISOString(),valid_until:new Date(p.fim).toISOString(),description:p.texto,points:p.pts}}),'Área da previsão atualizada.');mapRefresh();}
+
+/* ============ VIEW: estações INMET ============ */
+VIEWS.estacoes=()=>'<div id="notice" class="notice" hidden></div><div id="stations-host"><p class="hint">Carregando estações…</p></div>';
+function mountStations(){const h=$('#stations-host');if(!h)return;
+ Promise.resolve().then(()=>window.PrevStations(h)).catch(e=>{h.innerHTML='<p class="hint">Não foi possível carregar as estações ('+esc(e.message)+').</p>';});}
+
+/* ============ VIEW: usuários e equipe ============ */
+const accountRow=u=>`<tr><td><div class="u"><span class="avatar" style="width:36px;height:36px;font-size:13px">${initials(u.nome)}</span><div><strong>${esc(u.nome)}</strong><small>${esc(u.email)}</small></div></div></td><td>${esc(u.codigo)}</td>
+ <td><select class="field" style="height:38px;width:auto" id="role-${u.id}" aria-label="Função de ${esc(u.nome)}" ${u.id===ME().id?'disabled':''}><option value="USER"${u.role==='USER'?' selected':''}>Usuário</option><option value="METEOROLOGIST"${u.role==='METEOROLOGIST'?' selected':''}>Meteorologista</option></select></td>
+ <td><div class="tacts">${u.id===ME().id?'<span class="hint">Você</span>':`<button class="btn sm" data-act="saveRole" data-id="${u.id}">Salvar função</button>`}<button class="btn sm" data-act="editAccount" data-id="${u.id}">${ico('pencil',15)}Editar</button>${u.id===ME().id?'':`<button class="btn sm danger" data-act="deactivate" data-id="${u.id}">${ico('ban',15)}Desativar</button>`}</div></td></tr>`;
+VIEWS.usuarios=()=>{
+ const m=UI.member;
+ return `<section class="panel" style="margin-bottom:16px"><div class="panel-h"><h2>Credenciar meteorologista</h2></div><div class="panel-b">
+  <div class="two-f"><div class="fl"><label for="m-nome">Nome completo</label><input class="field" id="m-nome" data-f="member.nome" value="${esc(m.nome)}"></div>
+  <div class="fl"><label for="m-email">E-mail</label><input class="field" id="m-email" type="email" data-f="member.email" value="${esc(m.email)}"></div></div>
+  <div class="fl"><label for="m-senha">Senha temporária</label><input class="field" id="m-senha" type="text" autocomplete="off" data-f="member.senha" value="${esc(m.senha)}"><span class="hint">Mínimo de 6 caracteres, com uma letra maiúscula e um caractere especial.</span></div>
+  <div class="err" id="m-err" role="alert"></div>
+  <button class="btn primary" data-act="saveMember">${ico('userplus',18)}Criar conta</button></div></section>
+ <section class="panel"><div class="panel-h"><h2>Contas ativas</h2></div><div class="panel-b">
+  <div class="toolbar"><div class="search"><span class="sr">Buscar contas</span>${ico('search',17)}<input class="field" id="userQ" data-b="userQ" placeholder="Buscar por nome, e-mail ou código" value="${esc(UI.userQ)}"></div><button class="btn" data-act="searchAccounts">Buscar</button></div>
+  ${S.users.length?`<div class="tblw"><table><thead><tr><th>Conta</th><th>Código</th><th>Função</th><th></th></tr></thead><tbody>${S.users.map(accountRow).join('')}</tbody></table></div>`:`<div class="empty"><strong>Usuário não encontrado</strong>Tente outro nome, e-mail ou código.</div>`}
+ </div></section>`;
+};
+async function loadAccounts(){
+ try{const q=UI.userQ.trim();const L=await api('/panel/accounts'+(q?'?search='+encodeURIComponent(q):''));
+  S.users=L.map(u=>({id:sid(u.id),codigo:u.public_code,nome:u.name,email:u.email,role:u.role}));UI.usersLoaded=true;if(UI.page==='usuarios')rerender();}
+ catch(e){UI.usersLoaded=true;toast(e.message,true);}}
+
+/* ============ ações ============ */
+const A={
+ togglePw(){const i=$('#lg-pass');i.type=i.type==='password'?'text':'password';},
+ async login(el){
+  const e=$('#lg-email').value.trim().toLowerCase(),p=$('#lg-pass').value,er=$('#lg-err'),b=$('[data-act="login"]');
+  if(!e||!p){er.textContent='Informe o e-mail e a senha.';return;}
+  if(b&&b.disabled)return;if(b)b.disabled=true;er.textContent='';
+  try{
+   const lg=await api('/auth/login-token',{method:'POST',body:{email:e,password:p}});PCE.setToken(lg.access_token);
+   await refresh();LOGIN_MSG='';UI.page='dashboard';render();
+  }catch(x){er.textContent=x.status===401?'E-mail ou senha incorretos. Confira os dados e tente de novo.':x.message;}
+  finally{if(b)b.disabled=false;}
+ },
+ async logout(){try{await api('/auth/logout',{method:'POST',quiet:true});}catch(e){}PCE.setToken('');S=emptyState();UI.usersLoaded=false;UI.modal=null;renderModal();render();},
+ theme(){const r=document.documentElement;const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const nx=cur==='dark'?'light':'dark';r.setAttribute('data-theme',nx);try{localStorage.setItem(KEY+'_theme',nx);}catch(e){}glTheme();
+  api('/users/me',{method:'PATCH',body:{dark_theme:nx==='dark'},quiet:true}).catch(()=>{});},
+ async reset(){try{await refresh();rerenderAll();toast('Dados atualizados com o servidor.');}catch(e){toast(e.message,true);}},
+ toggleSide(){UI.sideOpen=!UI.sideOpen;$('.side').classList.toggle('open',UI.sideOpen);$('.scrim').classList.toggle('on',UI.sideOpen);},
+ go(el){UI.page=el.dataset.p;UI.sideOpen=false;UI.map.tool='select';UI.map.draft=[];renderShell_keepScroll();},
+ inmetRefresh(){INM.city[UI.riskCity]&&(INM.city[UI.riskCity].tried=0);loadCity(UI.riskCity,true);loadAvisos(true).then(()=>{toast(INM.status==='ok'?'Dados do INMET atualizados.':'Não foi possível falar com o INMET agora. Mostrando os últimos dados salvos.',INM.status!=='ok');});},
+ /* alertas */
+ alF(el){UI.alertF=el.dataset.f;renderPage();},
+ toggleAl(el){const id=el.dataset.id;UI.open.has(id)?UI.open.delete(id):UI.open.add(id);renderPage();},
+ goEmit(){const M=UI.map;UI.page='mapa';M.tool='draw';M.drawKind='alerta';M.draft=[];M.sel=null;M.selInm=null;M.cursor=null;renderShell_keepScroll();},
+ openInm(el){const M=UI.map,a=getInm(el.dataset.id);if(!a)return;UI.page='mapa';M.tool='select';M.sel=null;M.selInm=el.dataset.id;if(a.bb)M.focus=a.bb;renderShell_keepScroll();},
+ setAlertType(el){UI.form.tipo=el.dataset.v;renderModal();},
+ async publishAlert(el){
+  const f=UI.form,er=$('#f-err');
+  if(!f.fim||!f.texto.trim()){er.textContent=BLANK;return;}
+  if(el&&el.disabled)return;if(el)el.disabled=true;
+  const r=await run(()=>api('/panel/alerts',{method:'POST',body:{event_type:T2EV[f.tipo],valid_until:fromLocalInput(f.fim),message:f.texto.trim(),points:f.pts}}),'Alerta emitido. Os usuários da área foram notificados no site e no app.');
+  if(el)el.disabled=false;
+  if(!r.ok)return;
+  UI.open.add(String(r.r.id));endDraw();UI.modal=null;renderModal();mapRefresh();
+ },
+ viewAlertMap(el){const a=S.alerts.find(x=>x.id===el.dataset.id);if(!a)return;UI.page='mapa';UI.map.sel='a'+a.id;UI.map.selInm=null;UI.map.focus=bboxOf([a.pts]);UI.map.tool='select';renderShell_keepScroll();},
+ /* previsões */
+ setLevel(el){UI.form.level=+el.dataset.l;renderModal();},
+ reviewForecast(){const f=UI.form,er=$('#f-err');if(!f.ini||!f.fim||!f.texto.trim()){er.textContent=BLANK;return;}if(new Date(f.fim)<=new Date(f.ini)){er.textContent='O vencimento deve ser posterior à emissão.';return;}f.confirm=true;renderModal();},
+ backForecast(){UI.form.confirm=false;renderModal();},
+ async saveForecast(el){
+  const f=UI.form;
+  if(f.edit&&(!f.ini||!f.fim||!f.texto.trim())){$('#f-err').textContent=BLANK;return;}
+  if(el&&el.disabled)return;if(el)el.disabled=true;
+  const r=await run(()=>api(f.edit?'/panel/forecasts/'+f.fid:'/panel/forecasts',{method:f.edit?'PATCH':'POST',body:forecastBody(f)}),f.edit?'Alterações salvas.':'Previsão publicada no site e no app.');
+  if(el)el.disabled=false;
+  if(!r.ok){if(f.edit){UI.modal=null;renderModal();mapRefresh();}return;}
+  if(!f.edit)endDraw();UI.map.sel='p'+r.r.id;UI.modal=null;renderModal();mapRefresh();
+ },
+ editForecast(){const p=getPoly(UI.map.sel);if(!canEdit(p))return;UI.form={edit:true,fid:p.fid,level:p.level,ini:toLocalInput(p.ini),fim:toLocalInput(p.fim),texto:p.texto,pts:p.pts,confirm:false};UI.modal={type:'forecast'};renderModal();},
+ delForecast(){const p=getPoly(UI.map.sel);if(!p)return;ask({title:'Excluir esta previsão?',msg:'Essa ação remove a previsão do site e do aplicativo.',ok:'Excluir previsão',danger:true,fn:async()=>{const r=await run(()=>api('/panel/forecasts/'+p.fid,{method:'DELETE'}),'Previsão excluída.');if(r.ok)UI.map.sel=null;mapRefresh();}});},
+ /* mapa */
+ mapTool(el){UI.map.tool=el.dataset.t;UI.map.draft=[];renderMapBar();renderMapSide();drawMap();},
+ startDraw(el){const M=UI.map;M.tool='draw';M.drawKind=el.dataset.k;M.draft=[];M.sel=null;M.selInm=null;M.cursor=null;renderMapBar();renderMapSide();drawMap();},
+ finishDraw(){finishDraw();},
+ undoPt(){UI.map.draft.pop();renderMapBar();drawMap();},
+ cancelDraw(){const M=UI.map;M.tool='select';M.draft=[];M.cursor=null;renderMapBar();renderMapSide();drawMap();},
+ zoomIn(){GL.edit&&GL.edit.map&&GL.edit.map.zoomIn();},
+ zoomOut(){GL.edit&&GL.edit.map&&GL.edit.map.zoomOut();},
+ zoomReset(){UI.map.moved=false;GL.edit&&glFit(GL.edit.map,fitAll(UI.map.layers),true);},
+ selPoly(el){UI.map.sel=el.dataset.id;UI.map.selInm=null;renderMapSide();drawMap();},
+ selInm(el){const M=UI.map,a=getInm(el.dataset.id);if(!a)return;M.sel=null;M.selInm=el.dataset.id;if(a.bb&&GL.edit&&GL.edit.map){glFit(GL.edit.map,a.bb,true);M.moved=true;}renderMapSide();drawMap();},
+ deselect(){UI.map.sel=null;UI.map.selInm=null;renderMapSide();drawMap();},
+ /* usuários */
+ searchAccounts(){loadAccounts();},
+ async saveRole(el){const id=el.dataset.id,role=$('#role-'+id).value;await run(()=>api('/panel/accounts/'+id,{method:'PATCH',body:{role}}),'Função atualizada.');loadAccounts();},
+ editAccount(el){const u=S.users.find(x=>x.id===el.dataset.id);if(!u)return;UI.account={id:u.id,nome:u.nome,email:u.email};UI.modal={type:'account'};renderModal();},
+ async saveAccount(el){const a=UI.account,er=$('#a-err');if(!a.nome.trim()||!a.email.trim()){er.textContent='Um ou mais campos em branco';return;}
+  if(el&&el.disabled)return;if(el)el.disabled=true;er.textContent='';
+  try{await api('/panel/accounts/'+a.id,{method:'PATCH',body:{name:a.nome.trim(),email:a.email.trim()}});UI.modal=null;renderModal();toast('Usuário atualizado.');loadAccounts();}
+  catch(x){er.textContent=x.status===422?'Email inválido':x.message;if(el)el.disabled=false;}},
+ deactivate(el){const u=S.users.find(x=>x.id===el.dataset.id);if(!u)return;ask({title:'Desativar esta conta?',msg:`${u.nome} perderá o acesso ao PrevClima. Confirma essa ação?`,ok:'Desativar',danger:true,fn:async()=>{await run(()=>api('/panel/accounts/'+u.id,{method:'DELETE'}),'Conta desativada.');loadAccounts();}});},
+ async saveMember(el){const m=UI.member,er=$('#m-err');
+  if(!m.nome.trim()||!m.email.trim()||!m.senha){er.textContent=BLANK;return;}
+  if(el&&el.disabled)return;if(el)el.disabled=true;er.textContent='';
+  try{await api('/panel/meteorologists',{method:'POST',body:{name:m.nome.trim(),email:m.email.trim(),password:m.senha}});
+   UI.member={nome:'',email:'',senha:''};await refresh().catch(()=>{});toast('Conta de meteorologista criada.');await loadAccounts();}
+  catch(x){if(er)er.textContent=x.message;}
+  finally{if(el)el.disabled=false;}},
+ /* modal */
+ closeModal(){UI.modal=null;renderModal();},
+ confirmOk(){const fn=UI.modal&&UI.modal.fn;UI.modal=null;renderModal();if(fn)fn();}
+};
+/* depois de mexer no mapa: atualiza barra, painel lateral e camadas sem recriar o mapa */
+function mapRefresh(){if(UI.page!=='mapa')return;if(UI.map.sel&&!getPoly(UI.map.sel))UI.map.sel=null;renderMapBar();renderMapSide();drawMap();renderNav();}
+function renderShell_keepScroll(){renderPage();window.scrollTo(0,0);$('.side')&&$('.side').classList.remove('open');$('.scrim')&&$('.scrim').classList.remove('on');}
+
+const BIND={alQ:v=>{UI.alertQ=v;},userQ:v=>{UI.userQ=v;},riskCity:v=>{UI.riskCity=v;}};
+function onField(el){
+ const key=el.dataset.f;const [rt,k]=key.split('.');
+ const v=el.type==='checkbox'?el.checked:el.value;
+ const o=UI[rt];if(!o)return;o[k]=v;
+}
+document.addEventListener('click',e=>{
+ const bk=e.target.closest('[data-back]');
+ if(bk&&e.target===bk&&UI.modal){UI.modal=null;renderModal();return;}
+ const t=e.target.closest('[data-act]');
+ if(!t)return;
+ const fn=A[t.dataset.act];if(fn){e.preventDefault();fn(t,e);}
+});
+document.addEventListener('input',e=>{
+ const t=e.target;if(t.tagName==='SELECT'||t.type==='checkbox')return;
+ if(t.dataset.f)onField(t);
+ else if(t.dataset.b&&BIND[t.dataset.b]){BIND[t.dataset.b](t.value);if(t.dataset.b!=='userQ')rerender();}
+});
+document.addEventListener('change',e=>{
+ const t=e.target;
+ if(t.dataset.layer){UI.map.layers[t.dataset.layer]=t.checked;drawMap();return;}
+ if(t.tagName!=='SELECT'&&t.type!=='checkbox')return;
+ if(t.dataset.f)onField(t);
+ else if(t.dataset.b&&BIND[t.dataset.b]){BIND[t.dataset.b](t.value);rerender();}
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){if(UI.modal){UI.modal=null;renderModal();}else if(UI.page==='mapa'&&UI.map.tool==='draw'){A.cancelDraw();}}
+ if(e.key==='Enter'&&!S.session&&e.target.closest&&e.target.closest('#loginBox')){e.preventDefault();A.login();}
+ if(e.key==='Enter'&&e.target.id==='userQ'){e.preventDefault();loadAccounts();}
+ if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[role="button"][data-act]')){e.preventDefault();const fn=A[e.target.dataset.act];if(fn)fn(e.target,e);}
+});
+
+/* dados compartilhados: recarrega do servidor a cada minuto para ver o que o resto da equipe fez */
+function busy(){const M=UI.map;return !!(UI.modal||(UI.page==='mapa'&&(M.tool==='draw'||M.busy||M.saving)));}
+setInterval(()=>{if(!S.session||document.hidden||busy())return;refresh().then(()=>{if(!busy())rerenderAll();},()=>{});},MIN);
+/* INMET: busca ao abrir, revalida de hora em hora e sempre na virada do dia */
+setInterval(()=>{loadAvisos(false);},5*MIN);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAvisos(false);});
+/* abre o painel se a sessão ainda vale; senão mostra a tela de entrada */
+root.innerHTML='<div class="empty" style="margin:40px auto;max-width:420px"><strong>PrevClima</strong>Verificando a sua sessão…</div>';
+(PCE.token?refresh():Promise.reject(Object.assign(new Error(''),{status:401}))).then(()=>{render();},e=>{
+ if(e.status===403)LOGIN_MSG='Esta conta não tem acesso ao painel. Entre com uma conta de meteorologista.';
+ else if(e.status!==401)LOGIN_MSG=e.message;
+ render();
+}).finally(()=>{loadAvisos(false);});
+})();
+
+</script>
+</body>
+</html>

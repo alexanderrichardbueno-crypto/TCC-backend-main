@@ -18,7 +18,7 @@ from app.routers import auth, content, dashboard, inmet, panel, stations, users,
 
 settings = get_settings()
 public_dir = Path(__file__).resolve().parent.parent / "public"
-site_template = Path(__file__).resolve().parent.parent.parent / "site.tpl.html"
+site_template = Path(__file__).resolve().parent.parent / "site.tpl.html"
 
 DEFAULT_CSP = (
     "default-src 'self'; style-src 'self' 'unsafe-inline' https://unpkg.com "
@@ -185,7 +185,7 @@ def map_page():
 
 def site_html(request: Request) -> str:
     """site.tpl.html com o endereço da API, a chave do MapTiler e a logo preenchidos."""
-    # No Docker só a pasta do backend é copiada; ali vale a central de public/.
+    # Sem o template, vale a central de public/.
     source = site_template if site_template.is_file() else public_dir / "painel.html"
     html = source.read_text(encoding="utf-8")
     html = html.replace("__API_BASE__", str(request.base_url).rstrip("/"))
