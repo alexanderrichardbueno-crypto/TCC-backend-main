@@ -11,3 +11,4 @@ htmlcov/
 frontend/
 tmp*
 backups/
+banca.db
