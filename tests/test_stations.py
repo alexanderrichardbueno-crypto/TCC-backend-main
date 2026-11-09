@@ -169,6 +169,82 @@ def test_json_client_limits_redirects_and_bad_responses(monkeypatch):
             stations.fetch_json("estacoes/T")
 
 
+CATALOG_ROW = {
+    "CD_ESTACAO": "A771",
+    "DC_NOME": "INTERLAGOS",
+    "SG_ESTADO": "SP",
+    "CD_WSI": "0-76-0-3550308000000001",
+}
+
+
+def latest_row(code="A771"):
+    day = datetime.now(UTC).date().isoformat()
+    return {"CD_ESTACAO": code, "DT_MEDICAO": day, "HR_MEDICAO": "0000", "TEM_INS": "21.5"}
+
+
+@pytest.fixture()
+def fresh_attempts(monkeypatch):
+    monkeypatch.setattr("app.routers.stations._last_attempt", {})
+
+
+def test_empty_catalog_loads_for_visitors_and_keeps_geocode(
+    client, db, monkeypatch, fresh_attempts
+):
+    monkeypatch.setattr("app.routers.stations.fetch_json", lambda _: [CATALOG_ROW, {"bad": 1}])
+    response = client.get("/api/v1/stations")
+    assert [item["code"] for item in response.json()] == ["A771"]
+    assert db.get(WeatherStation, "A771").geocode == "3550308"
+
+
+def test_empty_catalog_survives_inmet_outage(client, db, monkeypatch, fresh_attempts):
+    def unavailable(_):
+        raise InmetError("INMET indisponível")
+
+    monkeypatch.setattr("app.routers.stations.fetch_json", unavailable)
+    response = client.get("/api/v1/stations")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_opening_station_fetches_latest_once(client, db, monkeypatch, fresh_attempts):
+    db.add(WeatherStation(code="A771", name="Interlagos", kind="AUTOMATIC", geocode="3550308"))
+    db.commit()
+    calls = []
+
+    def latest(geocode):
+        calls.append(geocode)
+        return latest_row()
+
+    monkeypatch.setattr("app.station_sync.fetch_latest", latest)
+    first = client.get("/api/v1/stations/A771/observations").json()
+    client.get("/api/v1/stations/A771/observations")
+    assert Decimal(first[0]["temperature_c"]) == Decimal("21.5")
+    assert first[0]["source"] == "INMET"
+    assert calls == ["3550308"]
+
+
+def test_latest_from_another_station_is_not_attributed(client, db, monkeypatch, fresh_attempts):
+    db.add(WeatherStation(code="A771", name="Interlagos", kind="AUTOMATIC", geocode="3550308"))
+    db.commit()
+    monkeypatch.setattr("app.station_sync.fetch_latest", lambda _: latest_row("A999"))
+    assert client.get("/api/v1/stations/A771/observations").json() == []
+    assert db.get(WeatherStation, "A999") is None
+
+
+def test_empty_answer_is_not_an_outage(monkeypatch):
+    settings = Settings(inmet_observations_enabled=True)
+    monkeypatch.setattr(stations, "get_settings", lambda: settings)
+    real_client = httpx.Client
+    monkeypatch.setattr(
+        stations.httpx,
+        "Client",
+        lambda **kwargs: real_client(
+            transport=httpx.MockTransport(lambda request: httpx.Response(204)), **kwargs
+        ),
+    )
+    assert stations.fetch_json("estacao/2026-01-01/2026-01-01/A001") == []
+
+
 def test_observation_sync_skips_wrong_station(operator, db, monkeypatch):
     db.add(WeatherStation(code="A001", name="Brasília", kind="AUTOMATIC"))
     db.commit()

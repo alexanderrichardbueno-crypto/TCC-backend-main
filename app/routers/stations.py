@@ -1,3 +1,4 @@
+import time
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -20,10 +21,49 @@ from app.integrations.stations import (
 from app.models import User
 from app.schemas import utc_iso
 from app.station_models import StationObservation, WeatherStation
-from app.station_sync import save_observations, save_station
+from app.station_sync import save_latest, save_observations, save_station
 
 router = APIRouter(prefix="/stations", tags=["estações INMET"])
 Operator = Annotated[User, Depends(require_roles("METEOROLOGIST"))]
+
+# Evita repetir consultas ao INMET a cada abertura de tela, inclusive quando ele falha.
+RETRY_SECONDS = 15 * 60
+_last_attempt: dict[str, float] = {}
+
+
+def attempt_allowed(key: str) -> bool:
+    now = time.monotonic()
+    if now - _last_attempt.get(key, -RETRY_SECONDS) < RETRY_SECONDS:
+        return False
+    _last_attempt[key] = now
+    return True
+
+
+def load_catalog_if_empty(db) -> None:
+    """Fill an empty catalog so visitors do not depend on a meteorologist's first sync."""
+    if db.scalar(select(WeatherStation.code).limit(1)) is not None:
+        return
+    if not attempt_allowed("catalog"):
+        return
+    try:
+        for row in fetch_json("estacoes/T"):
+            try:
+                db.add(WeatherStation(**station(row)))
+            except (ValueError, TypeError, AttributeError):
+                continue
+        db.commit()
+    except (InmetError, IntegrityError):
+        db.rollback()
+
+
+def refresh_latest(db, item: WeatherStation) -> None:
+    if not item.geocode or not attempt_allowed(item.code):
+        return
+    try:
+        save_latest(db, item)
+        db.commit()
+    except (InmetError, IntegrityError):
+        db.rollback()
 
 
 class StationOut(BaseModel):
@@ -83,6 +123,7 @@ def list_stations(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ):
+    load_catalog_if_empty(db)
     query = select(WeatherStation).order_by(WeatherStation.name, WeatherStation.code)
     if state:
         query = query.where(WeatherStation.state == state)
@@ -159,10 +200,12 @@ def observations(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ):
-    if not db.get(WeatherStation, code):
+    item = db.get(WeatherStation, code)
+    if not item:
         raise HTTPException(404, "Estação não encontrada")
     if start and end and start > end:
         raise HTTPException(422, "Intervalo de datas inválido")
+    refresh_latest(db, item)
     query = select(StationObservation).where(StationObservation.station_code == code)
     if start:
         query = query.where(
@@ -186,7 +229,8 @@ def observations(
 
 @router.post("/{code}/sync")
 def sync_station(code: str, payload: SyncRequest, db: DbSession, user: Operator):
-    if not db.get(WeatherStation, code):
+    item = db.get(WeatherStation, code)
+    if not item:
         raise HTTPException(404, "Estação não encontrada; sincronize o catálogo")
     try:
         records = fetch_observations(code, payload.start, payload.end)
@@ -203,6 +247,8 @@ def sync_station(code: str, payload: SyncRequest, db: DbSession, user: Operator)
             except (ValueError, TypeError, AttributeError):
                 skipped += 1
         inserted, updated = save_observations(db, rows)
+        if not records:  # o INMET não entrega mais o período; resta a medição mais recente
+            inserted, updated = save_latest(db, item)
         record_audit(
             db,
             actor=user,

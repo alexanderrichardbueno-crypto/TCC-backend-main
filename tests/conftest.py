@@ -18,6 +18,7 @@ def db(monkeypatch):
 
     monkeypatch.setattr(get_settings(), "open_meteo_enabled", False)
     monkeypatch.setattr(get_settings(), "inmet_enabled", False)
+    monkeypatch.setattr(get_settings(), "inmet_observations_enabled", False)
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},

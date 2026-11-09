@@ -927,6 +927,8 @@ function onField(el){
  const o=UI[rt];if(!o)return;o[k]=v;
 }
 document.addEventListener('click',e=>{
+ const forgot=e.target.closest('a[href*="recuperar-senha.html"]');
+ if(forgot){const mail=document.getElementById('lg-email')?.value.trim();forgot.href=forgot.href.split('#')[0]+(mail?'#email='+encodeURIComponent(mail):'');return;}
  const bk=e.target.closest('[data-back]');
  if(bk&&e.target===bk&&UI.modal){UI.modal=null;renderModal();return;}
  const t=e.target.closest('[data-act]');

@@ -13,6 +13,8 @@ import httpx
 from app.config import get_settings
 from app.integrations.inmet import InmetError
 
+UNAVAILABLE = "INMET indisponível ou resposta inválida; dados salvos preservados"
+
 
 def number(value, low=-999, high=9999):
     if value is None or str(value).strip().lower() in {"", "null", "nan", "-9999", "-9999.0"}:
@@ -41,8 +43,11 @@ def station(row):
     code = str(r.get("cdestacao") or r.get("codigoomm") or r.get("estacao") or "").strip()
     if not re.fullmatch(r"[A-Za-z0-9]{3,16}", code):
         raise ValueError("Código de estação inválido")
+    # O identificador WIGOS do INMET traz o código IBGE do município: 0-76-0-<IBGE><sufixo>.
+    wigos = re.fullmatch(r"0-76-0-(\d{7})\d*", str(r.get("cdwsi") or "").strip())
     return {
         "code": code.upper(),
+        "geocode": wigos.group(1) if wigos else None,
         "name": str(r.get("dcnome") or r.get("nomeestacao") or code)[:120],
         "state": str(r.get("sgestado") or r.get("estado") or "").upper()[:2] or None,
         "kind": "AUTOMATIC" if code[0].isalpha() else "CONVENTIONAL",
@@ -113,12 +118,11 @@ def parse_import(content: str, format: str, period: str):
     return parsed, skipped
 
 
-def fetch_json(path):
+def fetch_body(url):
+    """Download a fixed INMET URL. Never pass a URL supplied by a user or a station record."""
     settings = get_settings()
     if not settings.inmet_observations_enabled:
         raise InmetError("Observações INMET desabilitadas na configuração")
-    # Fixed trusted origin; never fetch a URL supplied by a user or a station record.
-    url = "https://apitempo.inmet.gov.br/" + path
     try:
         with httpx.Client(timeout=settings.inmet_timeout_seconds, follow_redirects=False) as client:
             with client.stream(
@@ -130,14 +134,35 @@ def fetch_json(path):
                     body.extend(chunk)
                     if len(body) > settings.inmet_max_response_bytes:
                         raise InmetError("Resposta INMET excede o limite configurado")
+        return bytes(body)
+    except httpx.HTTPError as error:
+        raise InmetError(UNAVAILABLE) from error
+
+
+def fetch_json(path):
+    body = fetch_body("https://apitempo.inmet.gov.br/" + path)
+    if not body:  # 204: o INMET respondeu, mas não há registros para a consulta
+        return []
+    try:
         result = json.loads(body)
-        if not isinstance(result, list):
-            raise ValueError("Esperada lista de registros")
-        return result
-    except (httpx.HTTPError, ValueError) as error:
-        raise InmetError(
-            "INMET indisponível ou resposta inválida; dados salvos preservados"
-        ) from error
+    except ValueError as error:
+        raise InmetError(UNAVAILABLE) from error
+    if not isinstance(result, list):
+        raise InmetError(UNAVAILABLE)
+    return result
+
+
+def fetch_latest(geocode: str):
+    """Latest measurement of the station INMET considers nearest to an IBGE municipality."""
+    if not re.fullmatch(r"\d{7}", geocode):
+        raise ValueError("Código IBGE inválido")
+    body = fetch_body(f"https://apiprevmet3.inmet.gov.br/estacao/proxima/{geocode}")
+    try:
+        result = json.loads(body)
+    except ValueError as error:
+        raise InmetError(UNAVAILABLE) from error
+    data = result.get("dados") if isinstance(result, dict) else None
+    return data if isinstance(data, dict) else None
 
 
 def fetch_observations(code: str, start: date, end: date):

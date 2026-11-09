@@ -32,6 +32,7 @@ class WeatherStation(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     state: Mapped[str | None] = mapped_column(String(2))
     kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    geocode: Mapped[str | None] = mapped_column(String(7))
     latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
     longitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
     updated_at: Mapped[datetime] = mapped_column(

@@ -5,7 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.querySelector("#code-form");
   const message = document.querySelector("#form-message");
   const email = document.querySelector("#email");
-  if (params.get("email")) email.value = params.get("email");
+  const givenEmail = new URLSearchParams(window.location.hash.slice(1)).get("email") || params.get("email");
+  if (givenEmail) email.value = givenEmail;
   const post = (path, body) => PrevClima.request(path, { method: "POST", body: JSON.stringify(body) });
 
   async function submit(target, output, operation) {
@@ -43,6 +44,50 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const requestForm = document.querySelector("#request-form");
+  const SENT_KEY = "prevclima-reset-code-sent";
+  const CODE_LIFETIME_MS = 30 * 60 * 1000;
+
+  // Recarregar a página não deve gerar outro código e invalidar o que já chegou.
+  function recentlySent(address) {
+    try {
+      const sent = JSON.parse(sessionStorage.getItem(SENT_KEY) || "null");
+      return Boolean(sent) && sent.email === address && Date.now() - sent.at < CODE_LIFETIME_MS;
+    } catch {
+      return false;
+    }
+  }
+
+  function rememberSent(address) {
+    try {
+      sessionStorage.setItem(SENT_KEY, JSON.stringify({ email: address, at: Date.now() }));
+    } catch {
+      // Sem armazenamento, o pior caso é reenviar o código ao recarregar.
+    }
+  }
+
+  async function sendCode() {
+    const address = email.value.trim();
+    message.textContent = "";
+    try {
+      const result = await post("/auth/forgot-password", { email: address });
+      message.textContent = result.message;
+      rememberSent(address);
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  }
+
+  document.querySelector("#resend-code").addEventListener("click", sendCode);
+
+  if (givenEmail && email.checkValidity()) {
+    const target = document.querySelector("#code-target");
+    target.textContent = `O código será enviado para ${email.value.trim()}.`;
+    target.hidden = false;
+    requestForm.hidden = true;
+    form.hidden = false;
+    if (!recentlySent(email.value.trim())) sendCode();
+  }
+
   requestForm.addEventListener("submit", (event) => {
     event.preventDefault();
     submit(requestForm, document.querySelector("#request-message"), async () => {

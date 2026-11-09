@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="stylesheet" href="/assets/css/design-refresh.css">
   <script src="/assets/js/api.js" defer></script>
-  <script src="/assets/js/account-code.js" defer></script>
+  <script src="/assets/js/account-code.js?v=2" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -29,10 +29,12 @@
         <button class="button" type="submit">Enviar código</button>
       </form>
       <form id="code-form" hidden>
+        <p id="code-target" class="helper" hidden></p>
         <div class="field"><label for="code">Código recebido por e-mail</label><input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></div>
         <div class="field"><label for="password">Nova senha</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required><span class="helper">Mínimo de 6 caracteres, com pelo menos uma letra maiúscula e um caractere especial.</span></div>
         <p id="form-message" class="error" role="alert"></p>
         <button class="button" type="submit">Redefinir senha</button>
+        <button id="resend-code" class="button secondary" type="button">Reenviar código</button>
       </form>
     </section>
     <a class="guest-link" href="/index.html">Voltar para o acesso</a>

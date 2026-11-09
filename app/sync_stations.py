@@ -10,7 +10,8 @@ from app.config import get_settings
 from app.database import SessionLocal
 from app.integrations.inmet import InmetError
 from app.integrations.stations import fetch_observations, observation
-from app.station_sync import save_observations
+from app.station_models import WeatherStation
+from app.station_sync import save_latest, save_observations
 
 
 def sync_once():
@@ -33,6 +34,9 @@ def sync_once():
                     except (ValueError, TypeError, AttributeError):
                         continue
                 inserted, updated = save_observations(db, rows)
+                item = db.get(WeatherStation, code)
+                if not rows and item:
+                    inserted, updated = save_latest(db, item)
                 db.commit()
                 print(f"{code}: {inserted} novas, {updated} atualizadas", flush=True)
             except (InmetError, SQLAlchemyError, ValueError) as error:
