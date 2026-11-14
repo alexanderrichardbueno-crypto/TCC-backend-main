@@ -1,3 +1,4 @@
+import asyncio
 import re
 import secrets
 from contextlib import asynccontextmanager
@@ -48,7 +49,24 @@ SITE_PAGES = {"/painel.html", "/profissional.html"}
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     settings.validate_production()
+    # Sem esta busca, site e app ficam sem os avisos do INMET (só a central os lê direto).
+    task = None
+    if settings.inmet_enabled and settings.inmet_sync_in_server:
+        task = asyncio.create_task(inmet_sync_loop())
     yield
+    if task:
+        task.cancel()
+
+
+async def inmet_sync_loop() -> None:
+    from app.sync_inmet import sync_once
+
+    while True:
+        try:
+            await asyncio.to_thread(sync_once)
+        except Exception as error:  # um erro não pode parar as próximas buscas
+            print(f"Falha ao sincronizar o INMET: {error}", flush=True)
+        await asyncio.sleep(settings.inmet_sync_interval_minutes * 60)
 
 
 app = FastAPI(

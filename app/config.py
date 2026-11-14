@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     inmet_timeout_seconds: float = Field(default=8.0, gt=0, le=60)
     inmet_max_response_bytes: int = Field(default=2_000_000, ge=1, le=5_000_000)
     inmet_sync_interval_minutes: int = Field(default=60, ge=10, le=1440)
+    # O próprio servidor busca os avisos; desligar só onde já roda o app.sync_inmet --loop.
+    inmet_sync_in_server: bool = True
     inmet_user_agent: str = "PrevClima/0.1 (integracao academica)"
     open_meteo_enabled: bool = False
     open_meteo_api_url: str = "https://api.open-meteo.com/v1/forecast"
