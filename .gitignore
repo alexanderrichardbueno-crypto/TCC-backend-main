@@ -12,3 +12,7 @@ frontend/
 tmp*
 backups/
 banca.db
+chave-banco.json
+servidor.log
+ferramentas/
+parar.flag

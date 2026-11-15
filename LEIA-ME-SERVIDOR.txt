@@ -1,0 +1,76 @@
+PREVCLIMA - COMO HOSPEDAR NESTE PC
+==================================
+
+Este PC vai rodar o PrevClima para o site e o app. Os dados ficam no banco do
+Firebase (na nuvem); aqui fica so o programa.
+
+IMPORTANTE: os arquivos ".env" e "chave-banco.json" sao senhas. Nao envie por
+mensagem, e-mail ou Git e nao mostre a ninguem.
+
+
+1. COPIAR A PASTA
+-----------------
+Copie a pasta "PrevClima" do pendrive para C:\PrevClima
+(o resultado deve ser C:\PrevClima\instalar-servidor.bat).
+
+
+2. INSTALAR (uma vez so, uns 10 minutos, precisa de internet)
+-------------------------------------------------------------
+Clique com o botao DIREITO em C:\PrevClima\instalar-servidor.bat e escolha
+"Executar como administrador".
+Se o Windows avisar "O Windows protegeu o computador", clique em
+"Mais informacoes" e depois em "Executar assim mesmo".
+
+Ele instala o Python e o Tailscale, prepara o PrevClima, deixa o PC sem
+suspender (na tomada) e faz o PrevClima ligar sozinho sempre que o Windows
+iniciar, mesmo sem ninguem entrar no usuario.
+
+Para conferir: abra http://127.0.0.1:18080 no navegador DESTE PC.
+
+
+3. TAILSCALE: ENDERECO NA INTERNET (uma vez so)
+-----------------------------------------------
+a) Abra o Tailscale (menu Iniciar) e clique em "Log in". Entre com a conta
+   indicada pelo dono do projeto.
+b) Abra o "Prompt de Comando" como administrador e rode:
+
+   "C:\Program Files\Tailscale\tailscale.exe" funnel --bg 18080
+
+c) Na primeira vez ele mostra um link para liberar o recurso "Funnel".
+   Abra o link, aprove e rode o mesmo comando de novo.
+d) Para ver o endereco do site:
+
+   "C:\Program Files\Tailscale\tailscale.exe" funnel status
+
+   Sera algo como https://nome-do-pc.algumacoisa.ts.net
+   Teste no celular, usando os dados moveis (fora do Wi-Fi).
+   Envie esse endereco ao dono do projeto (o app precisa dele).
+
+O Tailscale lembra essa configuracao: depois de reiniciar, volta sozinho.
+
+
+4. NO DIA A DIA
+---------------
+- Deixe o PC ligado na tomada e com internet.
+- Se o PC reiniciar (ex.: atualizacao do Windows), o PrevClima volta sozinho
+  depois de cerca de 1 minuto.
+- Se o programa travar, ele mesmo se religa.
+- Registro do que acontece: C:\PrevClima\servidor.log
+- Para DESLIGAR: clique duas vezes em parar-servidor.bat
+- Para LIGAR de novo: reinicie o PC ou clique duas vezes em iniciar-servidor.bat
+  (nesse caso, deixe a janela aberta).
+
+
+5. ATUALIZAR O PREVCLIMA (quando receber uma versao nova)
+---------------------------------------------------------
+1) Rode parar-servidor.bat.
+2) Copie os arquivos novos por cima, MAS NAO apague nem substitua:
+   .env   chave-banco.json   .venv   ferramentas
+3) Rode de novo o instalar-servidor.bat como administrador.
+
+
+PROBLEMAS
+---------
+- "Falta o arquivo .env" ou "chave-banco.json": copie de novo do pendrive.
+- O site nao abre: veja as ultimas linhas do servidor.log e confira a internet.
+- Funcionava e parou de vez: reinicie o PC.
