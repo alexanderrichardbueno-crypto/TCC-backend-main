@@ -50,8 +50,9 @@ h1, h2, .page-heading h1 { font-family: "Sora", sans-serif; }
 .theme-toggle.floating { margin: 0; position: fixed; right: 14px; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 900; }
 .brand-logo { border-radius: 50%; display: block; flex: none; object-fit: cover; }
 :root .brand { align-items: center; color: var(--text); display: inline-flex; font-family: "Sora", sans-serif; font-weight: 800; gap: 9px; letter-spacing: -.02em; }
-:root .brand > span:last-child { color: var(--gold); margin-left: -9px; }
-:root.light .brand > span:last-child { color: var(--gold-ink); }
+:root .brand > span { color: #fff; }
+:root.light .brand > span { color: var(--text); }
+:root .brand > span:last-child { margin-left: -9px; }
 .login-wordmark img { border-radius: 50%; object-fit: cover; }
 :root .auth-brand h1, :root .login-wordmark h1 { color: var(--text); font-family: "Sora", sans-serif; font-weight: 800; letter-spacing: -.02em; text-transform: none; }
 :root .auth-brand h1 span { color: var(--gold); }
