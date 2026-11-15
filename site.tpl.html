@@ -139,6 +139,7 @@ select.field{padding-right:10px}
 .wordmark span{color:#fff}.wordmark b{color:var(--gold)}
 .brand small{color:#8fa4d6;font-size:12px;font-weight:500}
 #nav{display:flex;flex-direction:column;gap:4px}
+a.nav-i{text-decoration:none}
 .nav-i{display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:12px;border:0;background:none;color:#b9c8ee;font-weight:600;text-align:left}
 .nav-i:hover{background:rgba(255,255,255,.07)}
 .nav-i.on{background:rgba(58,116,255,.24);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
@@ -605,6 +606,7 @@ lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0
 eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"/><circle cx="12" cy="12" r="3"/>',
 pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
 trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
 moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/>',
 layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
 pointer:'<path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51z"/>',
@@ -941,7 +943,6 @@ function renderShell(){
     <div class="side-tools">
      <button class="icon-btn" data-act="theme" aria-label="Tema" title="Tema">${ico('moon')}</button>
      <button class="icon-btn" data-act="reset" aria-label="Recarregar os dados do servidor" title="Recarregar os dados do servidor">${ico('refresh')}</button>
-     <a class="icon-btn" target="_blank" rel="noopener" href="${PCE.base}/inicio.html" aria-label="Abrir site público" title="Abrir site público">${ico('map')}</a>
      <button class="icon-btn" data-act="logout" aria-label="Sair" title="Sair">${ico('out')}</button>
     </div>
    </div>
@@ -977,7 +978,7 @@ function renderPage(){
 }
 function renderNav(){
  const nA=activeAlerts().length;
- $('#nav').innerHTML=NAV.map(n=>{const b=n.b==='al'?nA:0;return `<button class="nav-i${UI.page===n.p?' on':''}" data-act="go" data-p="${n.p}" ${UI.page===n.p?'aria-current="page"':''}>${ico(n.i,20)}<span>${n.n}</span>${b?`<span class="bdg">${b}</span>`:''}</button>`;}).join('');
+ $('#nav').innerHTML=NAV.map(n=>{const b=n.b==='al'?nA:0;return `<button class="nav-i${UI.page===n.p?' on':''}" data-act="go" data-p="${n.p}" ${UI.page===n.p?'aria-current="page"':''}>${ico(n.i,20)}<span>${n.n}</span>${b?`<span class="bdg">${b}</span>`:''}</button>`;}).join('')+`<a class="nav-i" target="_blank" rel="noopener" href="${PCE.base}/inicio.html">${ico('home',20)}<span>Interface do usuário</span></a>`;
 }
 function rerender(){
  const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;

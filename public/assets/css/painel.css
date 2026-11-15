@@ -127,6 +127,7 @@ select.field{padding-right:10px}
 .wordmark span{color:#fff}.wordmark b{color:var(--gold)}
 .brand small{color:#8fa4d6;font-size:12px;font-weight:500}
 #nav{display:flex;flex-direction:column;gap:4px}
+a.nav-i{text-decoration:none}
 .nav-i{display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:12px;border:0;background:none;color:#b9c8ee;font-weight:600;text-align:left}
 .nav-i:hover{background:rgba(255,255,255,.07)}
 .nav-i.on{background:rgba(58,116,255,.24);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
